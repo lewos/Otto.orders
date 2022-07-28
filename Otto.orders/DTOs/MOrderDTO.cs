@@ -401,7 +401,7 @@ namespace Otto.orders.DTOs
     public class Shipping
     {
         [JsonPropertyName("id")]
-        public long Id { get; set; }
+        public long? Id { get; set; }
     }
 
     public class Taxes
