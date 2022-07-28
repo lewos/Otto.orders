@@ -32,7 +32,7 @@ namespace Otto.orders.DTOs
         public OrderRequest OrderRequest { get; set; }
 
         [JsonPropertyName("fulfilled")]
-        public bool Fulfilled { get; set; }
+        public bool? Fulfilled { get; set; }
 
         [JsonPropertyName("mediations")]
         public List<object> Mediations { get; set; }
@@ -230,7 +230,7 @@ namespace Otto.orders.DTOs
         public object ManufacturingDays { get; set; }
 
         [JsonPropertyName("sale_fee")]
-        public int SaleFee { get; set; }
+        public double? SaleFee { get; set; }
 
         [JsonPropertyName("listing_type_id")]
         public string ListingTypeId { get; set; }

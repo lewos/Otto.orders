@@ -20,7 +20,7 @@ namespace Otto.orders.Services
             {
                 //TODO poner en una variable de entorno
                 string baseUrl = "https://api.mercadolibre.com";
-                string endpoint = Resource;
+                string endpoint = Resource.Substring(1);
                 string url = string.Join('/', baseUrl, endpoint);
 
 
@@ -52,6 +52,7 @@ namespace Otto.orders.Services
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Error al obtener la orden {Resource} del usuario {MUserId}. Ex : {ex}");
                 //TODO verificar en donde leo la respuesta del servicio
                 return new MOrderResponse(Response.ERROR, $"Error al obtener la orden {Resource} del usuario {MUserId}. Ex : {ex}", null);
 

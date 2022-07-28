@@ -171,6 +171,14 @@ namespace Otto.orders.Controllers
 
         }
 
+        [HttpGet("prueba")]
+        public async Task<IActionResult> Prueba() 
+        {
+            var orderResponse = await _mercadolibreService.GetOrder(1164363887, "/orders/2000003953215268", "APP_USR-744560801851200-072818-0ea8cf81d028d95f28b53c8707a45ce8-1164363887");
+
+            return Ok();
+
+        }
 
 
     }
