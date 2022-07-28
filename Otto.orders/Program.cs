@@ -10,6 +10,8 @@ builder.Services.AddNpgsql<OrderDb>(ConfigHelper.GetConnectionString());
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHostedService<QueueService>();
 builder.Services.AddScoped<AccessTokenService>();
+builder.Services.AddScoped<MercadolibreService>();
+builder.Services.AddScoped<OrderService>();
 builder.Services.AddHttpClient();
 
 builder.Services.AddSingleton<QueueTasks>();
