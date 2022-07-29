@@ -2,18 +2,18 @@
 {
     public class QueueTasks
     {
-        private readonly Queue<Task> _tasks;
+        private readonly Queue<Task<int>> _tasks;
         public QueueTasks()
         {
-            _tasks = new Queue<Task>();
+            _tasks = new Queue<Task<int>>();
         }
 
-        public void Enqueue(Task item) 
+        public void Enqueue(Task<int> item) 
         {
             _tasks.Enqueue(item);
         }
 
-        public Task Dequeue()
+        public Task<int> Dequeue()
         {
             return _tasks.Dequeue();
         }

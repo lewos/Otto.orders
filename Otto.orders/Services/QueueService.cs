@@ -24,16 +24,15 @@ namespace Otto.orders.Services
             }          
         }
 
-        private async void DoWorkAsync(Task task) 
+        private async Task DoWorkAsync(Task<int> task) 
         {
             try
             {
                 //TODO try catch, si hubo error en la task de guardar en la tabla de ordenes pendientes volver a encolar
 
-                task.Start();
                 Console.WriteLine(task.IsCompletedSuccessfully);
 
-                await task;
+                var a = await task;
 
                 Console.WriteLine(task.IsCompletedSuccessfully);
 

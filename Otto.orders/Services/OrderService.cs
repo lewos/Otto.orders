@@ -13,42 +13,55 @@ namespace Otto.orders.Services
 
         public async Task<List<Order>> GetAsync()
         {
-            return await _db.Orders.ToListAsync();
+            using (var db = new OrderDb())
+            {
+                return await db.Orders.ToListAsync();
+            }
         }
 
         public async Task<Order> GetByIdAsync(int id)
         {
-            return await _db.Orders.FindAsync(id);
+            using (var db = new OrderDb()) 
+            {
+                return await db.Orders.FindAsync(id);
+            }
         }
 
         public async Task<Tuple<Order, int>> CreateAsync(Order order) 
         {
-            var utcNow = DateTime.UtcNow;
+            using (var db = new OrderDb())
+            {
+                var utcNow = DateTime.UtcNow;
 
-            order.Created = utcNow;
-            order.Modified = utcNow;
-            order.ShippingStatus = "pending";
-
-
-            await _db.Orders.AddAsync(order);
-            var rowsAffected = await _db.SaveChangesAsync();
+                order.Created = utcNow;
+                order.Modified = utcNow;
+                order.ShippingStatus = "pending";
 
 
-            return new Tuple<Order, int>(order, rowsAffected);
+                await db.Orders.AddAsync(order);
+                var rowsAffected = await db.SaveChangesAsync();
+
+
+                return new Tuple<Order, int>(order, rowsAffected);
+            }
         }
 
         public async Task<int> UpdateAsync(int id, Order newOrder)
         {
-            // Si ya existe un token con ese mismo usuario, hago el update
-            var order = await _db.Orders.Where(t => t.Id == id).FirstOrDefaultAsync();
-            if (order != null)
+            using (var db = new OrderDb()) 
             {
-                UpdateOrderProperties(newOrder, order);
-                UpdateDateTimeKindForPostgress(order);
-            }
+                // Si ya existe un token con ese mismo usuario, hago el update
+                var order = await _db.Orders.Where(t => t.Id == id).FirstOrDefaultAsync();
+                if (order != null)
+                {
+                    UpdateOrderProperties(newOrder, order);
+                    UpdateDateTimeKindForPostgress(order);
+                }
 
-            _db.Entry(order).State = EntityState.Modified;
-            return await _db.SaveChangesAsync();
+                db.Entry(order).State = EntityState.Modified;
+                return await db.SaveChangesAsync();
+
+            }
 
         }
 
@@ -65,17 +78,19 @@ namespace Otto.orders.Services
 
         public async Task<int> DeleteAsync(int id, Order delOrder)
         {
-            var rowsAffected = 0;
-            var order = await _db.Orders.FindAsync(id);
-            if (order != null)
+            using (var db = new OrderDb())
             {
-                _db.Orders.Remove(delOrder);
-                rowsAffected = await _db.SaveChangesAsync();
+                var rowsAffected = 0;
+                var order = await db.Orders.FindAsync(id);
+                if (order != null)
+                {
+                    db.Orders.Remove(delOrder);
+                    rowsAffected = await db.SaveChangesAsync();
+                }
+
+                return rowsAffected;
             }
-           
-
-
-            return rowsAffected;
+             
         }
 }
 }
