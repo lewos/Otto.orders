@@ -1,4 +1,5 @@
-﻿using Otto.orders.DTOs;
+﻿using Microsoft.Extensions.Caching.Memory;
+using Otto.orders.DTOs;
 using Otto.orders.Models;
 using Otto.orders.Models.Responses;
 using System.Text.Json;
@@ -8,13 +9,35 @@ namespace Otto.orders.Services
     public class MercadolibreService
     {
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IMemoryCache _memoryCache;
+        private readonly MemoryCacheEntryOptions _cacheEntryOptions;
 
-        public MercadolibreService(IHttpClientFactory httpClientFactory)
+        public MercadolibreService(IHttpClientFactory httpClientFactory, IMemoryCache memoryCache)
         {
             _httpClientFactory = httpClientFactory;
+            _memoryCache = memoryCache;
+            _memoryCache = memoryCache;
+            _cacheEntryOptions = new MemoryCacheEntryOptions()
+                .SetSize(20)
+                .SetSlidingExpiration(TimeSpan.FromSeconds(3000));
         }
 
-        public async Task<MOrderResponse> GetOrder(long MUserId, string Resource, string AccessToken)
+
+        public async Task<MOrderResponse> GetMOrderCacheAsync(long MUserId, string Resource, string AccessToken)
+        {
+            var key = $"MOrderResponse_{Resource}";
+            if (!_memoryCache.TryGetValue(key, out MOrderResponse response))
+            {
+                var mOrderResponse = await GetMOrderAsync(MUserId, Resource,AccessToken);
+                _memoryCache.Set(key, mOrderResponse, _cacheEntryOptions);
+
+                return mOrderResponse;
+            }
+            return response;
+        }
+
+
+        public async Task<MOrderResponse> GetMOrderAsync(long MUserId, string Resource, string AccessToken)
         {
             try
             {
@@ -40,10 +63,17 @@ namespace Otto.orders.Services
                     var mOrder = await JsonSerializer.DeserializeAsync
                         <MOrderDTO>(contentStream);
 
+                    //TODO comentar
+                    string jsonString = JsonSerializer.Serialize(mOrder);
+                    Console.WriteLine(jsonString);
+
 
                     return new MOrderResponse(Response.OK, $"{Response.OK}", mOrder);
 
                 }
+                // TODO verificar si es 401 o sin permiso ver lo del refresh
+
+
 
                 //TODO si no lo encontro, verificar en donde leo la respuesta del servicio
                 return new MOrderResponse(Response.WARNING, $"No existe la orden {Resource} del usuario {MUserId}", null);
@@ -59,7 +89,7 @@ namespace Otto.orders.Services
             }
         }
 
-        public async Task<MItemResponse> GetItem(long MUserId, string Resource, string AccessToken)
+        public async Task<MItemResponse> GetMItemAsync(long MUserId, string Resource, string AccessToken)
         {
             try
             {

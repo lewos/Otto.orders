@@ -41,7 +41,7 @@ namespace Otto.orders.DTOs
         public int TotalAmount { get; set; }
 
         [JsonPropertyName("paid_amount")]
-        public int PaidAmount { get; set; }
+        public double PaidAmount { get; set; }
 
         [JsonPropertyName("coupon")]
         public Coupon Coupon { get; set; }
@@ -308,28 +308,28 @@ namespace Otto.orders.DTOs
         public string StatusDetail { get; set; }
 
         [JsonPropertyName("transaction_amount")]
-        public int TransactionAmount { get; set; }
+        public double TransactionAmount { get; set; }
 
         [JsonPropertyName("transaction_amount_refunded")]
-        public int TransactionAmountRefunded { get; set; }
+        public double TransactionAmountRefunded { get; set; }
 
         [JsonPropertyName("taxes_amount")]
-        public int TaxesAmount { get; set; }
+        public double TaxesAmount { get; set; }
 
         [JsonPropertyName("shipping_cost")]
-        public int ShippingCost { get; set; }
+        public double ShippingCost { get; set; }
 
         [JsonPropertyName("coupon_amount")]
-        public int CouponAmount { get; set; }
+        public double CouponAmount { get; set; }
 
         [JsonPropertyName("overpaid_amount")]
-        public int OverpaidAmount { get; set; }
+        public double OverpaidAmount { get; set; }
 
         [JsonPropertyName("total_paid_amount")]
-        public int TotalPaidAmount { get; set; }
+        public double TotalPaidAmount { get; set; }
 
         [JsonPropertyName("installment_amount")]
-        public int InstallmentAmount { get; set; }
+        public double? InstallmentAmount { get; set; }
 
         [JsonPropertyName("deferred_period")]
         public object DeferredPeriod { get; set; }

@@ -27,6 +27,16 @@ namespace Otto.orders.Services
             }
         }
 
+        public async Task<Order> GetByMOrderIdAsync(long id)
+        {
+            using (var db = new OrderDb())
+            {
+                var order = await db.Orders.Where(t => t.MOrderId == id).FirstOrDefaultAsync();
+                return order;
+            }
+        }
+
+
         public async Task<Tuple<Order, int>> CreateAsync(Order order) 
         {
             using (var db = new OrderDb())
@@ -46,12 +56,12 @@ namespace Otto.orders.Services
             }
         }
 
-        public async Task<int> UpdateAsync(int id, Order newOrder)
+        public async Task<Tuple<Order, int>> UpdateAsync(int id, Order newOrder)
         {
             using (var db = new OrderDb()) 
             {
                 // Si ya existe un token con ese mismo usuario, hago el update
-                var order = await _db.Orders.Where(t => t.Id == id).FirstOrDefaultAsync();
+                var order = await db.Orders.Where(t => t.Id == id).FirstOrDefaultAsync();
                 if (order != null)
                 {
                     UpdateOrderProperties(newOrder, order);
@@ -59,8 +69,8 @@ namespace Otto.orders.Services
                 }
 
                 db.Entry(order).State = EntityState.Modified;
-                return await db.SaveChangesAsync();
-
+                var rowsAffected = await db.SaveChangesAsync();
+                return new Tuple<Order, int>(order, rowsAffected);
             }
 
         }

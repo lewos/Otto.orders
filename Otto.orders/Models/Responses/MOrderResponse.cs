@@ -4,6 +4,10 @@ namespace Otto.orders.Models.Responses
 {
     public class MOrderResponse
     {
+        public MOrderResponse()
+        {
+
+        }
         public MOrderResponse(Response r, string v, MOrderDTO o)
         {
             res = r;

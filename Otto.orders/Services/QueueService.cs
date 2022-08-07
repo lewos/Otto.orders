@@ -20,7 +20,7 @@ namespace Otto.orders.Services
             {
                 // TODO y que la task no este vacia
                 if(_queueTasks.Count() > 0)
-                    DoWorkAsync(_queueTasks.Dequeue());
+                    await DoWorkAsync(_queueTasks.Dequeue());
             }          
         }
 

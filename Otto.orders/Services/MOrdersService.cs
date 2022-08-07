@@ -22,65 +22,158 @@ namespace Otto.orders.Services
             //Ver si el topico es el que necesito
             if (!string.IsNullOrEmpty(dto.Topic) && dto.Topic.Contains("orders_v2"))
             {
-                //Buscar el accessToken de ese usuario
-                MTokenDTO accessToken = await GetAccessToken(dto);
-
-                if(accessToken != null)                
+                //TODO si ya guarde la orden y mercadolibre sigue notificando, descartar notificacion
+                // Guardar en un cache en memoria, algunas ordenes asi no consulto la base constantemente
+                if (await isNewOrder(dto))
                 {
-                    // TODO get order
-                    var orderResponse = await _mercadolibreService.GetOrder((long)dto.MUserId, dto.Resource, accessToken.AccessToken);
+                    return await CreateOrder(dto);
+                }
+                else 
+                {
+                    //return await UpdateOrder(dto);
 
-                    if (orderResponse.res == Models.Response.OK)
+                    return 0;
+                }
+                return 0;
+            }
+            return 0;
+        }
+
+        private async Task<int> CreateOrder(MOrderNotificationDTO dto)
+        {
+            //Buscar el accessToken de ese usuario
+            MTokenDTO accessToken = await GetAccessToken(dto);
+
+            if (accessToken != null)
+            {
+                // TODO get order
+                var orderResponse = await _mercadolibreService.GetMOrderCacheAsync((long)dto.MUserId, dto.Resource, accessToken.AccessToken);
+
+                if (orderResponse.res == Response.OK)
+                {
+                    var mOrder = await GetMOrder(dto);
+
+                    //TODO fijarme si la orden pertenece a un carrito
+                    //El campo "pack_id" muestra el número de paquete al cual pertenece la orden.
+                    if (mOrder.PackId == null)
                     {
-                        var order = orderResponse.mOrder;
+                        //Hay un solo producto en ese paquete
+                        //TODO Ver la orden -- no es necesario, depende de los datos a guardar
 
-                        //TODO fijarme si la orden pertenece a un carrito
-                        //El campo "pack_id" muestra el número de paquete al cual pertenece la orden.
-                        if (order.PackId == null)
-                        {
-                            //Hay un solo producto en ese paquete
-                            //TODO Ver la orden -- no es necesario, depende de los datos a guardar
+                        //Guardar la orden
+                        //Verificar que la orden ya no exista
 
-                            //Guardar la orden
-                            //Verificar que la orden ya no exista
-
-                            //
-                            //
-                            //TODO ver bajo que campo tengo que obtener la orden para ver si existe _orderService.GetByIdAsync
-                            var a = await CreateOrder(order);
-                            return a;
-
-                        }
-                        else
-                        {
-                            //TODO get items from order
-                            //var itemsOrder = await _mercadolibreService.GetItem((long)dto.MUserId, dto.Resource, accessToken.AccessToken);
-                            Console.WriteLine($"Tiene pack id, por ahora no estoy haciendo nada");
-                            return 0;
-                        }
+                        //
+                        //
+                        //TODO ver bajo que campo tengo que obtener la orden para ver si existe _orderService.GetByIdAsync
+                        var a = await CreateOrder(mOrder);
+                        return a;
 
                     }
                     else
                     {
-                        //TODO...... no obtuve la orden
-                        Console.WriteLine($"No se pudo obtener la orden");
+                        //TODO get items from order
+                        //var itemsOrder = await _mercadolibreService.GetItem((long)dto.MUserId, dto.Resource, accessToken.AccessToken);
+                        Console.WriteLine($"Tiene pack id, por ahora no estoy haciendo nada");
                         return 0;
                     }
-
-
-
-                    //TODO Ver si el producto o item de la orden esta dentro del deposito o es una venta/orden que no esta en el deposito
-
 
                 }
                 else
                 {
-                    //TODO...... no obtuve el token
-                    Console.WriteLine($"No se pudo obtener el token");
+                    //TODO...... no obtuve la orden
+                    Console.WriteLine($"No se pudo obtener la orden");
                     return 0;
                 }
+
+
+
+                //TODO Ver si el producto o item de la orden esta dentro del deposito o es una venta/orden que no esta en el deposito
             }
-            return 0;
+            else
+            {
+                //TODO...... no obtuve el token
+                Console.WriteLine($"No se pudo obtener el token");
+                return 0;
+            }
+        }
+
+
+        //private async Task<int> UpdateOrder(MOrderNotificationDTO dto)
+        //{
+        //    var mOrder = await GetMOrder(dto);
+        //    //TODO Ver que campos hay que actualizar
+
+
+        //    //Obtener la orden vieja, orden de la base
+
+        //    //comparar con la orden vieja
+
+        //      // Es una orden que tiene un nuevo claim o mediacion // ej cancelada
+        //      // 
+
+        //    //update
+
+        //    //UpdateOrderTable            
+
+        //}
+        private async Task<int> UpdateOrderTable(MOrderDTO order)
+        {
+            var newOrder = new Order
+            {
+
+                UserId = "alo",
+                MUserId = order.Seller.Id,
+                MOrderId = order.Id,
+                //BusinessId
+                ItemId = order.OrderItems[0].Item.Id,
+                ItemDescription = order.OrderItems[0].Item.Title,
+                Quantity = order.OrderItems[0].Quantity,
+                //PackId
+                SKU = order.OrderItems[0].Item.SellerSku,
+            };
+            var oldOrder = await _orderService.GetByMOrderIdAsync(order.Id);
+
+            var algo = await _orderService.UpdateAsync(oldOrder.Id, newOrder);
+            Console.WriteLine($"Cantidad de filas afectadas {algo.Item2}");
+            return algo.Item2;
+        }
+
+
+        private async Task<MOrderDTO> GetMOrder(MOrderNotificationDTO dto)
+        {
+            //Buscar el accessToken de ese usuario
+            MTokenDTO accessToken = await GetAccessToken(dto);
+
+            var orderResponse = new MOrderResponse(Response.ERROR,"",new MOrderDTO());
+
+            if (accessToken != null)
+            {
+                // TODO get order
+                orderResponse = await _mercadolibreService.GetMOrderCacheAsync((long)dto.MUserId, dto.Resource, accessToken.AccessToken);
+            }
+
+            return orderResponse.res == Response.OK 
+                ? orderResponse.mOrder 
+                : null;
+
+        }
+
+        private async Task<bool> isNewOrder(MOrderNotificationDTO dto)
+        {
+            try
+            {
+                var resource = long.Parse(dto.Resource.Split("/")[2]);
+
+                var order = await _orderService.GetByMOrderIdAsync(resource);
+
+                //si la orden es null, no lo encontro
+                return order == null;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
         }
 
         private async Task<int> CreateOrder(MOrderDTO order)
@@ -90,6 +183,7 @@ namespace Otto.orders.Services
 
                 UserId = "alo",
                 MUserId = order.Seller.Id,
+                MOrderId = order.Id,
                 //BusinessId
                 ItemId = order.OrderItems[0].Item.Id,
                 ItemDescription = order.OrderItems[0].Item.Title,
@@ -104,8 +198,20 @@ namespace Otto.orders.Services
 
         private async Task<MTokenDTO> GetAccessToken(MOrderNotificationDTO dto)
         {
-            var res = await _accessTokenService.GetToken((long)dto.MUserId);
+            var res = await _accessTokenService.GetTokenCacheAsync((long)dto.MUserId);
+
+            if (hasTokenExpired(res.token))
+                res = await _accessTokenService.GetTokenAfterRefresh((long)dto.MUserId);
             return res.token;
+        }
+
+        private bool hasTokenExpired(MTokenDTO token)
+        {
+            var utcNow = DateTime.UtcNow;
+            // Si expiro o si esta a punto de expirar
+            if (token.ExpiresAt < utcNow + TimeSpan.FromMinutes(10))
+                return true;
+            return false;
         }
     }
 }
