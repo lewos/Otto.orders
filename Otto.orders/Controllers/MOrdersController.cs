@@ -22,38 +22,15 @@ namespace Otto.orders.Controllers
             _mOrdersService = mOrdersService;
         }
 
-        // POST api/<OrdersController>
         [HttpPost]
         public async Task<IActionResult> Post(MOrderNotificationDTO dto)
         {
-
-            // async procesar notificacion
-
-            Console.WriteLine("Aver si funciona esto");
-            string jsonString = JsonSerializer.Serialize(dto);
-
-            Console.WriteLine(jsonString);
-
-
-            //Console.WriteLine(value);
-            Console.WriteLine("Funciono?");
-
-
+            //string jsonString = JsonSerializer.Serialize(dto);
 
             //Procesar dentro de una cola -- para responder dentro de los 500ms 
-            //_queueTasks.Enqueue(_mOrdersService.ProcesarOrden(dto));
-
-            //await _mOrdersService.ProcesarOrden(dto); // funciona
-
-            //var q = await _mOrdersService.ProcesarOrden(dto);
-
             _queueTasks.Enqueue(_mOrdersService.ProcesarOrden(dto));
 
-            //_mOrdersService.ProcesarOrden(dto); // no se , no creo
-
             return Ok();
-
-
         }
 
 

@@ -38,6 +38,23 @@ namespace Otto.orders.Services
             }
         }
 
+        public async Task<List<OrderDTO>> GetPendingAsync()
+        {
+            using(var db = new OrderDb())
+            {
+                var orders = await db.Orders.Where(t => t.State == State.Pendiente).ToListAsync();
+
+                List<OrderDTO> result = GetListOrderDTO(orders);
+                return result;
+            }
+        }
+
+        private static List<OrderDTO> GetListOrderDTO(List<Order> orders)
+        {
+            var result = new List<OrderDTO>();
+            orders.ForEach(order => result.Add(OrderMapper.GetOrderDTO(order)));
+            return result;
+        }
 
         public async Task<Tuple<Order, int>> CreateAsync(Order order)
         {
@@ -59,7 +76,7 @@ namespace Otto.orders.Services
             }
         }
 
-        public async Task<Tuple<Order, int>> UpdateOrderInProgressAsync(int id, string UserIdInProgress)
+        public async Task<Tuple<OrderDTO, int>> UpdateOrderInProgressAsync(int id, string UserIdInProgress)
         {
             //TODO check con el servicio de usuario con el id UserIdInProgress exista
 
@@ -71,22 +88,75 @@ namespace Otto.orders.Services
                     UpdateOrderInProgressProperties(UserIdInProgress, order);
                     UpdateDateTimeKindForPostgress(order);
                 }
+                else 
+                {
+                    return new Tuple<OrderDTO, int>(null, 0);
+                }
 
                 db.Entry(order).State = EntityState.Modified;
                 var rowsAffected = await db.SaveChangesAsync();
-                return new Tuple<Order, int>(order, rowsAffected);
+                var dto = OrderMapper.GetOrderDTO(order);
+
+                return new Tuple<OrderDTO, int>(dto, rowsAffected);
             }
         }
 
-        private void UpdateOrderInProgressProperties(string UserIdInProgress, Order order)
+        public async Task<Tuple<OrderDTO, int>> UpdateOrderStopInProgressAsync(int id, string UserIdInProgress)
+        {
+            //TODO check con el servicio de usuario con el id UserIdInProgress exista
+
+            using (var db = new OrderDb())
+            {
+                //quien esta cancelando sea quien la tomo
+                var order = await db.Orders.Where(t => t.Id == id && 
+                                                       t.InProgress == true && 
+                                                       t.UserIdInProgress == UserIdInProgress &&
+                                                       t.State != State.Finalizada &&
+                                                       t.State != State.Enviada
+                                                       ).FirstOrDefaultAsync();
+                if (order != null)
+                {
+                    UpdateOrderInProgressProperties(UserIdInProgress, order, true);
+                    UpdateDateTimeKindForPostgress(order);
+                }
+                else
+                {
+                    return new Tuple<OrderDTO, int>(null, 0);
+                }
+
+                db.Entry(order).State = EntityState.Modified;
+                var rowsAffected = await db.SaveChangesAsync();
+                var dto = OrderMapper.GetOrderDTO(order);
+
+                return new Tuple<OrderDTO, int>(dto, rowsAffected);
+            }
+        }
+
+        
+
+
+        private void UpdateOrderInProgressProperties(string UserIdInProgress, Order order,bool CancelInProgress = false)
         {
             var utcNow = DateTime.UtcNow;
-            order.Modified = utcNow;
-            order.State = State.Tomada;
-            order.InProgress = true;
-            order.UserIdInProgress = UserIdInProgress;
-            order.InProgressDateTimeTaken = utcNow;
-            order.InProgressDateTimeModified = utcNow;
+            if (CancelInProgress)
+            {
+                order.Modified = utcNow;
+                order.State = State.Pendiente;
+                order.InProgress = false;
+                order.UserIdInProgress = String.Empty;
+                order.InProgressDateTimeTaken = utcNow;
+                order.InProgressDateTimeModified = utcNow;
+            }
+            else 
+            {
+                order.Modified = utcNow;
+                order.State = State.Tomada;
+                order.InProgress = true;
+                order.UserIdInProgress = UserIdInProgress;
+                order.InProgressDateTimeTaken = utcNow;
+                order.InProgressDateTimeModified = utcNow;
+            }
+
         }
 
         public async Task<Tuple<Order, int>> UpdateAsync(int id, Order newOrder)
