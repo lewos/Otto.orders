@@ -28,7 +28,7 @@ namespace Otto.orders.Services
             var key = $"MOrderResponse_{Resource}";
             if (!_memoryCache.TryGetValue(key, out MOrderResponse response))
             {
-                var mOrderResponse = await GetMOrderAsync(MUserId, Resource,AccessToken);
+                var mOrderResponse = await GetMOrderAsync(MUserId, Resource, AccessToken);
                 _memoryCache.Set(key, mOrderResponse, _cacheEntryOptions);
 
                 return mOrderResponse;

@@ -28,7 +28,7 @@ namespace Otto.orders.Services
                 {
                     return await CreateOrder(dto);
                 }
-                else 
+                else
                 {
                     //return await UpdateOrder(dto);
 
@@ -139,13 +139,12 @@ namespace Otto.orders.Services
             return algo.Item2;
         }
 
-
         private async Task<MOrderDTO> GetMOrder(MOrderNotificationDTO dto)
         {
             //Buscar el accessToken de ese usuario
             MTokenDTO accessToken = await GetAccessToken(dto);
 
-            var orderResponse = new MOrderResponse(Response.ERROR,"",new MOrderDTO());
+            var orderResponse = new MOrderResponse(Response.ERROR, "", new MOrderDTO());
 
             if (accessToken != null)
             {
@@ -153,8 +152,8 @@ namespace Otto.orders.Services
                 orderResponse = await _mercadolibreService.GetMOrderCacheAsync((long)dto.MUserId, dto.Resource, accessToken.AccessToken);
             }
 
-            return orderResponse.res == Response.OK 
-                ? orderResponse.mOrder 
+            return orderResponse.res == Response.OK
+                ? orderResponse.mOrder
                 : null;
 
         }
@@ -190,6 +189,7 @@ namespace Otto.orders.Services
                 Quantity = order.OrderItems[0].Quantity,
                 //PackId
                 SKU = order.OrderItems[0].Item.SellerSku,
+                State = State.Pendiente
             };
             var algo = await _orderService.CreateAsync(newOrder);
             Console.WriteLine($"Cantidad de filas afectadas {algo.Item2}");

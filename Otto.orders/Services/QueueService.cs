@@ -15,16 +15,16 @@ namespace Otto.orders.Services
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-           
-            while (await _timer.WaitForNextTickAsync(stoppingToken) && !stoppingToken.IsCancellationRequested ) 
+
+            while (await _timer.WaitForNextTickAsync(stoppingToken) && !stoppingToken.IsCancellationRequested)
             {
                 // TODO y que la task no este vacia
-                if(_queueTasks.Count() > 0)
+                if (_queueTasks.Count() > 0)
                     await DoWorkAsync(_queueTasks.Dequeue());
-            }          
+            }
         }
 
-        private async Task DoWorkAsync(Task<int> task) 
+        private async Task DoWorkAsync(Task<int> task)
         {
             try
             {
@@ -40,7 +40,7 @@ namespace Otto.orders.Services
 
             }
             catch (Exception ex)
-            {                
+            {
 
                 Console.WriteLine($"Error aca: {ex}");
 

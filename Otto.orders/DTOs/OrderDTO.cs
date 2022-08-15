@@ -1,7 +1,9 @@
-﻿namespace Otto.orders.Models
+﻿namespace Otto.orders.DTOs
 {
-    public class Order
+    // TODO poner una base clase
+    public class OrderDTO
     {
+
         //id, vendedor, id_item, item_description, quantity ,id_carrito, sku, , shipping_status
         public int Id { get; set; }
         //vendedor
@@ -14,12 +16,13 @@
         public int Quantity { get; set; }
         public string? PackId { get; set; }
         public string? SKU { get; set; }
-        public State ShippingStatus { get; set; }
+        public string ShippingStatus { get; set; }
         public DateTime? Created { get; set; }
         public DateTime? Modified { get; set; }
-        public State State { get; set; }
+        public string? State { get; set; }
         public bool? InProgress { get; set; }
         public string? UserIdInProgress { get; set; }
+
         public DateTime? InProgressDateTimeTaken { get; set; }
         public DateTime? InProgressDateTimeModified { get; set; }
     }

@@ -36,6 +36,15 @@ namespace Otto.orders.Migrations
                     b.Property<DateTime?>("Created")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<bool?>("InProgress")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("InProgressDateTimeModified")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("InProgressDateTimeTaken")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("ItemDescription")
                         .IsRequired()
                         .HasColumnType("text");
@@ -62,11 +71,16 @@ namespace Otto.orders.Migrations
                     b.Property<string>("SKU")
                         .HasColumnType("text");
 
-                    b.Property<string>("ShippingStatus")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("ShippingStatus")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("State")
+                        .HasColumnType("integer");
 
                     b.Property<string>("UserId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("UserIdInProgress")
                         .HasColumnType("text");
 
                     b.HasKey("Id");

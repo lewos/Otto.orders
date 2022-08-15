@@ -12,8 +12,8 @@ using Otto.orders.Models;
 namespace Otto.orders.Migrations
 {
     [DbContext(typeof(OrderDb))]
-    [Migration("20220803180939_MOrderId")]
-    partial class MOrderId
+    [Migration("20220815230352_Initial")]
+    partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -36,6 +36,15 @@ namespace Otto.orders.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<DateTime?>("Created")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool?>("InProgress")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("InProgressDateTimeModified")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("InProgressDateTimeTaken")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("ItemDescription")
@@ -64,11 +73,16 @@ namespace Otto.orders.Migrations
                     b.Property<string>("SKU")
                         .HasColumnType("text");
 
-                    b.Property<string>("ShippingStatus")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("ShippingStatus")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("State")
+                        .HasColumnType("integer");
 
                     b.Property<string>("UserId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("UserIdInProgress")
                         .HasColumnType("text");
 
                     b.HasKey("Id");

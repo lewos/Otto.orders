@@ -23,7 +23,7 @@ namespace Otto.orders.Services
         }
 
 
-        public async Task<MAccessTokenResponse> GetTokenCacheAsync(long MUserId) 
+        public async Task<MAccessTokenResponse> GetTokenCacheAsync(long MUserId)
         {
             var key = $"AccessToken_{MUserId}";
             if (!_memoryCache.TryGetValue(key, out MAccessTokenResponse response))
@@ -88,7 +88,7 @@ namespace Otto.orders.Services
 
             }
 
-            
+
         }
 
         public async Task<MAccessTokenResponse> GetTokenAfterRefresh(long MUserId)

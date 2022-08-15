@@ -8,7 +8,7 @@
             _tasks = new Queue<Task<int>>();
         }
 
-        public void Enqueue(Task<int> item) 
+        public void Enqueue(Task<int> item)
         {
             _tasks.Enqueue(item);
         }
@@ -18,7 +18,7 @@
             return _tasks.Dequeue();
         }
 
-        public int Count() 
+        public int Count()
         {
             return _tasks.Count;
         }
