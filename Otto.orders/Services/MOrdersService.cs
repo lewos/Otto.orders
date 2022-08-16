@@ -9,12 +9,14 @@ namespace Otto.orders.Services
         private readonly AccessTokenService _accessTokenService;
         private readonly MercadolibreService _mercadolibreService;
         private readonly OrderService _orderService;
+        private readonly UserService _userService;
 
-        public MOrdersService(AccessTokenService accessTokenService, MercadolibreService mercadolibreService, OrderService orderService)
+        public MOrdersService(AccessTokenService accessTokenService, MercadolibreService mercadolibreService, OrderService orderService, UserService userService)
         {
             _accessTokenService = accessTokenService;
             _mercadolibreService = mercadolibreService;
             _orderService = orderService;
+            _userService = userService;
         }
 
         public async Task<int> ProcesarOrden(MOrderNotificationDTO dto)
@@ -86,8 +88,6 @@ namespace Otto.orders.Services
                     return 0;
                 }
 
-
-
                 //TODO Ver si el producto o item de la orden esta dentro del deposito o es una venta/orden que no esta en el deposito
             }
             else
@@ -158,6 +158,17 @@ namespace Otto.orders.Services
 
         }
 
+        private async Task<UserDTO> GetUser(long MUserId)
+        {
+            var userResponse = await _userService.GetUserByMIdCacheAsync(MUserId);
+            return userResponse.res == Response.OK
+                ? userResponse.user
+                : null;
+
+        }
+
+
+
         private async Task<bool> isNewOrder(MOrderNotificationDTO dto)
         {
             try
@@ -177,10 +188,12 @@ namespace Otto.orders.Services
 
         private async Task<int> CreateOrder(MOrderDTO order)
         {
+            // Buscar ese usuario id
+            var user = await GetUser(order.Seller.Id);
+
             var newOrder = new Order
             {
-
-                UserId = "alo",
+                UserId = user?.Id,
                 MUserId = order.Seller.Id,
                 MOrderId = order.Id,
                 //BusinessId
@@ -189,7 +202,9 @@ namespace Otto.orders.Services
                 Quantity = order.OrderItems[0].Quantity,
                 //PackId
                 SKU = order.OrderItems[0].Item.SellerSku,
-                State = State.Pendiente
+                State = State.Pendiente,
+                ShippingStatus = State.Pendiente,
+                Created = DateTime.UtcNow
             };
             var algo = await _orderService.CreateAsync(newOrder);
             Console.WriteLine($"Cantidad de filas afectadas {algo.Item2}");
