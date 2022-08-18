@@ -43,8 +43,6 @@ namespace Otto.orders.Services
             {
 
                 Console.WriteLine($"Error aca: {ex}");
-
-                throw;
             }
 
         }

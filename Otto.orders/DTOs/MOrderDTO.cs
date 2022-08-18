@@ -23,7 +23,7 @@ namespace Otto.orders.DTOs
         public object Comment { get; set; }
 
         [JsonPropertyName("pack_id")]
-        public object PackId { get; set; }
+        public long? PackId { get; set; }
 
         [JsonPropertyName("pickup_id")]
         public object PickupId { get; set; }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Otto.orders.DTOs;
+using Otto.orders.Mapper;
 using Otto.orders.Models;
 using Otto.orders.Services;
 using System.Text.Json;
@@ -13,13 +14,30 @@ namespace Otto.orders.Controllers
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly QueueTasks _queueTasks;
         private readonly MOrdersService _mOrdersService;
+        private readonly MercadolibreService _mercadolibreService;
 
         public MOrdersController(IHttpContextAccessor httpContextAccessor, QueueTasks queueTasks,
-            MOrdersService mOrdersService)
+            MOrdersService mOrdersService, MercadolibreService mercadolibreService)
         {
             _httpContextAccessor = httpContextAccessor;
             _queueTasks = queueTasks;
             _mOrdersService = mOrdersService;
+
+            //Check for unread notifications and queue if necesary
+            CheckUnreadNotifications();
+        }
+
+        private async void CheckUnreadNotifications()
+        {
+            var unreadNotifications = await _mOrdersService.GetMUnreadNotificationsAsync();
+
+            var messages = MissedFeedsMapper.GetListMOrderNotificationDTO(unreadNotifications?.Messages);
+
+            foreach (var msj in messages) 
+            {
+                if(!string.IsNullOrEmpty(msj.Topic) && msj.Topic.Contains("orders_v2"))
+                    _queueTasks.Enqueue(_mOrdersService.ProcesarOrden(msj));
+            }
         }
 
         [HttpPost]
@@ -28,7 +46,7 @@ namespace Otto.orders.Controllers
             //string jsonString = JsonSerializer.Serialize(dto);
 
             //Procesar dentro de una cola -- para responder dentro de los 500ms 
-            _queueTasks.Enqueue(_mOrdersService.ProcesarOrden(dto));
+           _queueTasks.Enqueue(_mOrdersService.ProcesarOrden(dto));
 
             return Ok();
         }

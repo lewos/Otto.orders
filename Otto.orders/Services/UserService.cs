@@ -40,7 +40,7 @@ namespace Otto.orders.Services
         {
             try
             {
-                //TODO poner en una variable de entorno
+                //Deberia estar dentro de una variable de entorno
                 string baseUrl = "https://ottousers.herokuapp.com";
                 string endpoint = "api/Users/GetByMUserId";
                 string url = string.Join('/', baseUrl, endpoint, MUserId);
@@ -70,15 +70,14 @@ namespace Otto.orders.Services
 
                 }
 
-
-                //TODO si no lo encontro, verificar en donde leo la respuesta del servicio
+                //si no lo encontro, verificar en donde leo la respuesta del servicio
                 return new UserResponse(Response.WARNING, $"No existe el usuario con el id {MUserId}", null);
 
 
             }
             catch (Exception ex)
             {
-                //TODO verificar en donde leo la respuesta del servicio
+                //verificar en donde leo la respuesta del servicio
                 return new UserResponse(Response.ERROR, $"Error al obtener el usuario con id {MUserId}. Ex : {ex}", null);
 
             }

@@ -29,7 +29,8 @@ namespace Otto.orders.Services
             if (!_memoryCache.TryGetValue(key, out MAccessTokenResponse response))
             {
                 var mAccessTokenResponse = await GetToken(MUserId);
-                _memoryCache.Set(key, mAccessTokenResponse, _cacheEntryOptions);
+                if(mAccessTokenResponse.res== Response.OK)
+                    _memoryCache.Set(key, mAccessTokenResponse, _cacheEntryOptions);
 
                 return mAccessTokenResponse;
             }
@@ -40,7 +41,7 @@ namespace Otto.orders.Services
         {
             try
             {
-                //TODO poner en una variable de entorno
+                //Deberia estar en una variable de entorno
                 string baseUrl = "https://ottomtokens.herokuapp.com";
                 string endpoint = "api/MTokens/ByMUserId";
                 string url = string.Join('/', baseUrl, endpoint, MUserId);
@@ -66,24 +67,15 @@ namespace Otto.orders.Services
                     var mToken = await JsonSerializer.DeserializeAsync
                         <MTokenDTO>(contentStream);
 
-
-                    //TODO en el caso que este vencido o este cerca de vencer hacer llamar a la api para hacer el refresh
-
-                    Console.WriteLine(mToken.AccessToken);
-
                     return new MAccessTokenResponse(Response.OK, $"{Response.OK}", mToken);
 
                 }
-
-
-                //TODO si no lo encontro, verificar en donde leo la respuesta del servicio
+                //si no lo encontro, verificar en donde leo la respuesta del servicio
                 return new MAccessTokenResponse(Response.WARNING, $"No existe el token del usuario {MUserId}", null);
-
-
             }
             catch (Exception ex)
             {
-                //TODO verificar en donde leo la respuesta del servicio
+                //verificar en donde leo la respuesta del servicio
                 return new MAccessTokenResponse(Response.ERROR, $"Error al obtener el token del usuario {MUserId}. Ex : {ex}", null);
 
             }
@@ -96,7 +88,7 @@ namespace Otto.orders.Services
 
             try
             {
-                //TODO poner en una variable de entorno
+                //Deberia estar en una variable de entorno
                 string baseUrl = "https://ottomtokens.herokuapp.com";
                 string endpoint = "api/MTokens/RefreshByMUserId";
                 string url = string.Join('/', baseUrl, endpoint, MUserId);
@@ -121,22 +113,15 @@ namespace Otto.orders.Services
                     var mToken = await JsonSerializer.DeserializeAsync
                         <MTokenDTO>(contentStream);
 
-                    Console.WriteLine(mToken.AccessToken);
-
                     return new MAccessTokenResponse(Response.OK, $"{Response.OK}", mToken);
-
                 }
-
-                //TODO si no lo encontro, verificar en donde leo la respuesta del servicio
+                //si no lo encontro, verificar en donde leo la respuesta del servicio
                 return new MAccessTokenResponse(Response.WARNING, $"No existe el token del usuario {MUserId}", null);
-
-
             }
             catch (Exception ex)
             {
-                //TODO verificar en donde leo la respuesta del servicio
+                //verificar en donde leo la respuesta del servicio
                 return new MAccessTokenResponse(Response.ERROR, $"Error al obtener el token del usuario {MUserId}. Ex : {ex}", null);
-
             }
         }
 

@@ -74,7 +74,7 @@ namespace Otto.orders.Controllers
         public async Task<IActionResult> Put(int id, [FromBody] Order order)
         {
             order.Id = id;
-            var result = await _orderService.UpdateOrderTableAsync(id, order);
+            var result = await _orderService.UpdateOrderTableByIdAsync(id, order);
             return Ok(result.Item1);
         }
 

@@ -2,7 +2,7 @@
 
 namespace Otto.orders.DTOs
 {
-    public class MOrderNotificationDTO
+    public class MOrderNotificationDTO: MOrderNotificationBase
     {
         /*
          * {
@@ -16,13 +16,18 @@ namespace Otto.orders.DTOs
               "received":"2019-10-30T16:19:20.106Z"
             }
          */
+        [JsonPropertyName("user_id")]
+        public long? MUserId { get; set; }
 
+    }
+
+    //Deberia estar en otra archivo
+    public class MOrderNotificationBase
+    {
         [JsonPropertyName("_id")]
         public string Id { get; set; }
         [JsonPropertyName("resource")]
         public string? Resource { get; set; }
-        [JsonPropertyName("user_id")]
-        public long? MUserId { get; set; }
         [JsonPropertyName("topic")]
         public string Topic { get; set; }
         [JsonPropertyName("application_id")]
@@ -34,4 +39,5 @@ namespace Otto.orders.DTOs
         [JsonPropertyName("received")]
         public DateTime? Received { get; set; }
     }
+
 }

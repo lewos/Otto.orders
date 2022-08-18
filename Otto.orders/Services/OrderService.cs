@@ -38,6 +38,16 @@ namespace Otto.orders.Services
             }
         }
 
+        public async Task<Order> GetByMOrderIdWithoutPackIdAsync(long id)
+        {
+            using (var db = new OrderDb())
+            {
+                var order = await db.Orders.Where(t => t.MOrderId == id).FirstOrDefaultAsync();
+                return order;
+            }
+        }
+
+
         public async Task<List<OrderDTO>> GetPendingAsync()
         {
             using(var db = new OrderDb())
@@ -59,15 +69,7 @@ namespace Otto.orders.Services
         public async Task<Tuple<Order, int>> CreateAsync(Order order)
         {
             using (var db = new OrderDb())
-            {
-                var utcNow = DateTime.UtcNow;
-
-                order.Created = utcNow;
-                order.Modified = utcNow;
-                order.ShippingStatus = State.Pendiente;
-                order.State = State.Pendiente;
-                order.InProgress = false;
-
+            {                
                 await db.Orders.AddAsync(order);
                 var rowsAffected = await db.SaveChangesAsync();
 
@@ -159,26 +161,33 @@ namespace Otto.orders.Services
 
         }
 
-        public async Task<Tuple<Order, int>> UpdateAsync(int id, Order newOrder)
+        public async Task<Tuple<Order, int>> UpdateAsync(long id, Order newOrder)
         {
-            using (var db = new OrderDb())
+            try
             {
-                // Si ya existe un token con ese mismo usuario, hago el update
-                var order = await db.Orders.Where(t => t.Id == id).FirstOrDefaultAsync();
-                if (order != null)
+                using (var db = new OrderDb())
                 {
-                    UpdateOrderProperties(newOrder, order);
-                    UpdateDateTimeKindForPostgress(order);
+                    // Si ya existe un token con ese mismo usuario, hago el update
+                    var order = await db.Orders.Where(t => t.Id == id).FirstOrDefaultAsync();
+                    if (order != null)
+                    {
+                        UpdateOrderProperties(newOrder, order);
+                        UpdateDateTimeKindForPostgress(order);
+                    }
+
+                    db.Entry(order).State = EntityState.Modified;
+                    var rowsAffected = await db.SaveChangesAsync();
+                    return new Tuple<Order, int>(order, rowsAffected);
                 }
-
-                db.Entry(order).State = EntityState.Modified;
-                var rowsAffected = await db.SaveChangesAsync();
-                return new Tuple<Order, int>(order, rowsAffected);
             }
-
+            catch (Exception ex )
+            {
+                var a = ex;
+                throw;
+            }           
         }
 
-        public async Task<Tuple<Order, int>> UpdateOrderTableAsync(int id, Order newOrder)
+        public async Task<Tuple<Order, int>> UpdateOrderTableByIdAsync(int id, Order newOrder)
         {
             using (var db = new OrderDb())
             {
@@ -198,6 +207,36 @@ namespace Otto.orders.Services
                 var rowsAffected = await db.SaveChangesAsync();
                 return new Tuple<Order, int>(order, rowsAffected);
             }
+        }
+
+        public async Task<Tuple<Order, int>> UpdateOrderTableByMIdAsync(long mOrderId, Order newOrder)
+        {
+            try
+            {
+                using (var db = new OrderDb())
+                {
+                    // Si ya existe un token con ese mismo usuario, hago el update
+                    var order = await db.Orders.Where(t => t.MOrderId == mOrderId).FirstOrDefaultAsync();
+                    if (order != null)
+                    {
+
+                        var utcNow = DateTime.UtcNow;
+                        order.Modified = DateTime.UtcNow;
+
+                        UpdateOrderAllProperties(newOrder, order);
+                        UpdateDateTimeKindForPostgress(order);
+                    }
+
+                    db.Entry(order).State = EntityState.Modified;
+                    var rowsAffected = await db.SaveChangesAsync();
+                    return new Tuple<Order, int>(order, rowsAffected);
+                }
+            }
+            catch (Exception ex )
+            {
+                var j = ex;
+                throw;
+            }            
         }
 
         private void UpdateOrderAllProperties(Order newOrder, Order order)

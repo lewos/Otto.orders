@@ -1,6 +1,6 @@
 ﻿namespace Otto.orders.DTOs
 {
-    // TODO poner una base clase
+    //Deberia poner una base clase
     public class OrderDTO
     {
 
