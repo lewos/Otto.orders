@@ -1,6 +1,7 @@
 ﻿using Otto.orders.DTOs;
 using Otto.orders.Models;
 using Otto.orders.Models.Responses;
+using System.Text.Json;
 
 namespace Otto.orders.Services
 {
@@ -44,20 +45,6 @@ namespace Otto.orders.Services
             var mOrder = await GetMOrder(dto);
             if (mOrder != null)
             {
-                //TODO SACAR comentarios
-
-                //Si la orden pertenece a un carrito
-                //El campo "pack_id" muestra el número de paquete al cual pertenece la orden.
-                //if (mOrder.PackId == null)
-                //Hay un solo producto en ese paquete                    
-                //Guardar la orden
-                //var a = await CreateOrder(mOrder);
-                //return a;
-                //Hay mas de un producto en ese paquete                    
-                //Guardar un registro por cada producto
-                //var a = await CreateOrder(mOrder);
-                //return a;
-
                 //Ver como llega la orden. LLega un item/producto por orden, por lo tanto tengo que guardar la orden y se va a agrupar por el pack id
                 //Si no tiene pack_id, la orden contiene un solo producto
                 var a = await CreateOrder(mOrder);
@@ -80,20 +67,6 @@ namespace Otto.orders.Services
             var mOrder = await GetMOrder(dto);
             if (mOrder != null)
             {
-                //TODO Ver que campos hay que actualizar
-
-
-                //Obtener la orden vieja, orden de la base
-
-                //comparar con la orden vieja
-
-                // Es una orden que tiene un nuevo claim o mediacion // ej cancelada
-                // 
-
-                //update
-
-                //UpdateOrderTable     
-
                 var a = await UpdateOrderTable(mOrder);
                 return a;
             }
@@ -107,8 +80,16 @@ namespace Otto.orders.Services
         }
         private async Task<int> UpdateOrderTable(MOrderDTO order)
         {
-            //TODO verificar que campos hay que actualizar, lo mas seguro sea el estado si esta cancelado
 
+            //string cadena = "{\"id\": 2000004068397970,\"date_created\": \"2022-08-18T19:15:12-03:00\",\"date_closed\": \"2022-08-18T19:15:33-03:00\",\"last_updated\": \"2022-08-19T16:42:03-03:00\",\"manufacturing_ending_date\": null,\"comment\": null,\"pack_id\": 2000003758168231,\"pickup_id\": null,\"order_request\": {\"return\": null,\"change\": null},\"fulfilled\": false,\"mediations\": [{\"id\": 5142295289}],\"total_amount\": 1578,\"paid_amount\": 0,\"coupon\": {\"id\": null,\"amount\": 0},\"expiration_date\": \"2022-09-15T19:15:33-03:00\",\"order_items\": [{\"item\": {\"id\": \"MLA1153822235\",\"title\": \"Item De Prueba - Por Favor, No Ofertar\",\"category_id\": \"MLA380657\",\"variation_id\": null,\"seller_custom_field\": null,\"variation_attributes\": [],\"warranty\": \"Garantía de fábrica: 8 meses\",\"condition\": \"new\",\"seller_sku\": \"IDPPNOR\",\"global_price\": null,\"net_weight\": null},\"quantity\": 2,\"requested_quantity\": {\"value\": 2,\"measure\": \"unit\"},\"picked_quantity\": null,\"unit_price\": 789,\"full_unit_price\": 789,\"currency_id\": \"ARS\",\"manufacturing_days\": null,\"sale_fee\": 368.54,\"listing_type_id\": \"gold_pro\"}],\"currency_id\": \"ARS\",\"payments\": [{\"id\": 25004539421,\"order_id\": 2000004068397970,\"payer_id\": 1164373159,\"collector\": {\"id\": 1164363887},\"card_id\": null,\"site_id\": \"MLA\",\"reason\": \"Item De Prueba - Por Favor, No Ofertar\",\"payment_method_id\": \"account_money\",\"currency_id\": \"ARS\",\"installments\": 1,\"issuer_id\": null,\"atm_transfer_reference\": {\"company_id\": null,\"transaction_id\": null},\"coupon_id\": null,\"activation_uri\": null,\"operation_type\": \"regular_payment\",\"payment_type\": \"account_money\",\"available_actions\": [\"\"],\"status\": \"refunded\",\"status_code\": null,\"status_detail\": \"bpp_refunded\",\"transaction_amount\": 1578,\"transaction_amount_refunded\": 1578,\"taxes_amount\": 0,\"shipping_cost\": 0,\"coupon_amount\": 0,\"overpaid_amount\": 0,\"total_paid_amount\": 1578,\"installment_amount\": null,\"deferred_period\": null,\"date_approved\": \"2022-08-18T19:15:33-03:00\",\"authorization_code\": null,\"transaction_order_id\": null,\"date_created\": \"2022-08-18T19:15:33-03:00\",\"date_last_modified\": \"2022-08-19T16:41:59-03:00\"}],\"shipping\": {\"id\": 41596080714},\"status\": \"cancelled\",\"status_detail\": null,\"tags\": [\"test_order\",\"pack_order\",\"not_delivered\",\"not_paid\"],\"feedback\": {\"buyer\": null,\"seller\": null},\"context\": {\"channel\": \"marketplace\",\"site\": \"MLA\",\"flows\": []},\"buyer\": {\"id\": 1164373159,\"nickname\": \"TESTJPME7DLO\",\"first_name\": \"Test\",\"last_name\": \"Test\",\"phone\": null,\"alternative_phone\": null,\"email\": null},\"seller\": {\"id\": 1164363887,\"nickname\": \"TESTC5MGH6XY\",\"first_name\": \"Test\",\"last_name\": \"Test\",\"phone\": {\"extension\": \"\",\"area_code\": \"01\",\"number\": \"1111-1111\",\"verified\": false},\"alternative_phone\": {\"area_code\": \"\",\"extension\": \"\",\"number\": \"\"},\"email\": \"test_user_47518799@testuser.com\"},\"taxes\": {\"amount\": null,\"currency_id\": null,\"id\": null}}";
+            //var objetooooo= JsonSerializer.Deserialize<MOrderDTO>(cadena);
+            //Console.WriteLine(objetooooo);
+
+            // Es una orden que tiene un nuevo claim o mediacion // ej cancelada
+            //Si se cancela la compra
+            var state = State.Pendiente;
+            if (order.Status.Contains("cancelled"))
+                state = State.Cancelada;
 
             // Buscar ese usuario id
             var user = await GetUser(order.Seller.Id);
@@ -124,10 +105,12 @@ namespace Otto.orders.Services
                 Quantity = order.OrderItems[0].Quantity,
                 PackId = order.PackId.ToString(),
                 SKU = order.OrderItems[0].Item.SellerSku,
-                State = State.Pendiente,
-                ShippingStatus = State.Pendiente,
-                Created = DateTime.UtcNow
+                State = state,
+                ShippingStatus = state,
             };
+
+            if (state == State.Cancelada)
+                newOrder.StateDescription = $"La orden fue cancelada por el comprador. Id de mediacion {order.Mediations.FirstOrDefault().Id}";
 
             var algo = await _orderService.UpdateOrderTableByMIdAsync((long)newOrder.MOrderId, newOrder);
             Console.WriteLine($"Cantidad de filas afectadas {algo.Item2}");

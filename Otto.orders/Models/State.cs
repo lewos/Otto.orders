@@ -5,6 +5,7 @@
         Pendiente,
         Tomada,
         Enviada,
-        Finalizada
+        Finalizada,
+        Cancelada
     }
 }

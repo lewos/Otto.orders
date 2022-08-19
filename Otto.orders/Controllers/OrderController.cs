@@ -99,6 +99,32 @@ namespace Otto.orders.Controllers
         }
 
 
+        [HttpPut("FinalizeOrderByMOrderId/{id}")]
+        public async Task<IActionResult> FinalizeOrderByMOrderId(string id, [FromBody] InProgressDTO dto)
+        {
+            dto.Id = id;
+            var result = await _orderService.UpdateFinalizeOrderByMOrderIdAsync(id, dto.UserIdInProgress);
+            if (result.Item2 > 0)
+                return Ok(result.Item1);
+            else
+                return Conflict("No se encontro una orden con ese id o el el id del operario no es el mismo que la tomo o la misma ya se encuentra en un estado final");
+        }
+
+
+        [HttpPut("FinalizeOrderByPackId/{id}")]
+        public async Task<IActionResult> FinalizeOrderByPackId(string id, [FromBody] InProgressDTO dto)
+        {
+            dto.Id = id;
+            var result = await _orderService.UpdateOrderStopInProgressByPackIdAsync(id, dto.UserIdInProgress);
+            if (result.Item2 > 0)
+                return Ok(result.Item1);
+            else
+                return Conflict("No se encontro una orden con ese id o el el id del operario no es el mismo que la tomo o la misma ya se encuentra en un estado final");
+        }
+
+
+
+
 
         [HttpPut("{id}")]
         public async Task<IActionResult> Put(int id, [FromBody] Order order)

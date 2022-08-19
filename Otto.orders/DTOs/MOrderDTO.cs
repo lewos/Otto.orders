@@ -35,7 +35,7 @@ namespace Otto.orders.DTOs
         public bool? Fulfilled { get; set; }
 
         [JsonPropertyName("mediations")]
-        public List<object> Mediations { get; set; }
+        public List<Mediation> Mediations { get; set; }
 
         [JsonPropertyName("total_amount")]
         public int TotalAmount { get; set; }
@@ -65,7 +65,7 @@ namespace Otto.orders.DTOs
         public string Status { get; set; }
 
         [JsonPropertyName("status_detail")]
-        public object StatusDetail { get; set; }
+        public string? StatusDetail { get; set; }
 
         [JsonPropertyName("tags")]
         public List<string> Tags { get; set; }
@@ -414,6 +414,12 @@ namespace Otto.orders.DTOs
 
         [JsonPropertyName("id")]
         public object Id { get; set; }
+    }
+
+    public class Mediation 
+    {
+        [JsonPropertyName("id")]
+        public long? Id { get; set; }
     }
 
 }

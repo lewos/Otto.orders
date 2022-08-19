@@ -241,6 +241,7 @@ namespace Otto.orders.Services
                                                        t.InProgress == true && 
                                                        t.UserIdInProgress == UserIdInProgress &&
                                                        t.State != State.Finalizada &&
+                                                       t.State != State.Cancelada &&
                                                        t.State != State.Enviada
                                                        ).ToListAsync();
                 if (orders != null)
@@ -248,7 +249,7 @@ namespace Otto.orders.Services
                     var items = new List<OrderDTO>();
                     foreach (var order in orders)
                     {
-                        UpdateOrderInProgressProperties(UserIdInProgress, order, true);
+                        UpdateFinalizeOrder(UserIdInProgress, order);
                         UpdateDateTimeKindForPostgress(order);
                         db.Entry(order).State = EntityState.Modified;
                         rowsAffected = +await db.SaveChangesAsync();
@@ -264,7 +265,48 @@ namespace Otto.orders.Services
             }
         }
 
-        
+
+        public async Task<Tuple<OrderDTO, int>> UpdateFinalizeOrderByMOrderIdAsync(string id, string UserIdInProgress)
+        {
+            //TODO check con el servicio de usuario con el id UserIdInProgress exista
+
+            using (var db = new OrderDb())
+            {
+                //quien esta cancelando sea quien la tomo
+                var order = await db.Orders.Where(t => t.MOrderId == long.Parse(id) &&
+                                                       t.InProgress == true &&
+                                                       t.UserIdInProgress == UserIdInProgress &&
+                                                       t.State != State.Finalizada &&
+                                                       t.State != State.Cancelada &&
+                                                       t.State != State.Enviada
+                                                       ).FirstOrDefaultAsync();
+                if (order != null)
+                {
+                    UpdateFinalizeOrder(UserIdInProgress, order);
+                    UpdateDateTimeKindForPostgress(order);
+                }
+                else
+                {
+                    return new Tuple<OrderDTO, int>(null, 0);
+                }
+
+                db.Entry(order).State = EntityState.Modified;
+                var rowsAffected = await db.SaveChangesAsync();
+                var dto = OrderMapper.GetOrderDTO(order);
+
+                return new Tuple<OrderDTO, int>(dto, rowsAffected);
+            }
+        }
+
+        private void UpdateFinalizeOrder(string UserIdInProgress, Order order)
+        {
+            var utcNow = DateTime.UtcNow;
+            order.Modified = utcNow;
+            order.State = State.Finalizada;
+            order.InProgress = false;
+            order.UserIdInProgress = String.Empty;
+            order.InProgressDateTimeModified = utcNow;
+        }
 
 
         private void UpdateOrderInProgressProperties(string UserIdInProgress, Order order,bool CancelInProgress = false)
@@ -353,7 +395,7 @@ namespace Otto.orders.Services
                         var utcNow = DateTime.UtcNow;
                         order.Modified = DateTime.UtcNow;
 
-                        UpdateOrderAllProperties(newOrder, order);
+                        UpdateOrderChangedProperties(newOrder, order);
                         UpdateDateTimeKindForPostgress(order);
                     }
 
@@ -391,6 +433,48 @@ namespace Otto.orders.Services
             order.InProgressDateTimeTaken = newOrder.InProgressDateTimeTaken;
             order.InProgressDateTimeModified = newOrder.InProgressDateTimeModified;
         }
+        private void UpdateOrderChangedProperties(Order newOrder, Order order)
+        {
+            var utcNow = DateTime.UtcNow;
+            if (newOrder.UserId != null && order.UserId != newOrder.UserId)
+                order.UserId = newOrder.UserId;
+            if (order.MUserId != null && order.MUserId != newOrder.MUserId)
+                order.MUserId = newOrder.MUserId;
+            if (order.MOrderId != null && order.MOrderId != newOrder.MOrderId)
+                order.MOrderId = newOrder.MOrderId;
+            if (order.BusinessId != null && order.BusinessId != newOrder.BusinessId)
+                order.BusinessId = newOrder.BusinessId;
+            if (order.ItemId != null && order.ItemId != newOrder.ItemId)
+                order.ItemId = newOrder.ItemId;
+            if (order.ItemDescription != null && order.ItemDescription != newOrder.ItemDescription)
+                order.ItemDescription = newOrder.ItemDescription;
+            if (order.Quantity != newOrder.Quantity)
+                order.Quantity = newOrder.Quantity;
+            if (order.PackId != null && order.PackId != newOrder.PackId)
+                order.PackId = newOrder.PackId;
+            if (order.SKU != null && order.SKU != newOrder.SKU)
+                order.SKU = newOrder.SKU;
+            if (order.ShippingStatus != newOrder.ShippingStatus)
+                order.ShippingStatus = newOrder.ShippingStatus;
+            //if (order.Created != null && order.Created != newOrder.Created)
+            //    order.Created = newOrder.Created;
+            if (order.Modified != null && order.Modified != utcNow)
+                order.Modified = utcNow;
+            if (order.State != newOrder.State)
+                order.State = newOrder.State;
+            if (order.UserIdInProgress != null && order.UserIdInProgress != newOrder.UserIdInProgress)
+                order.UserIdInProgress = newOrder.UserIdInProgress;
+            if (order.InProgressDateTimeTaken != null && order.InProgressDateTimeTaken != newOrder.InProgressDateTimeTaken)
+                order.InProgressDateTimeTaken = newOrder.InProgressDateTimeTaken;
+            if (order.InProgressDateTimeModified != null && order.InProgressDateTimeModified != newOrder.InProgressDateTimeModified)
+                order.InProgressDateTimeModified = newOrder.InProgressDateTimeModified;
+            if (newOrder.InProgress != null && order.InProgress != newOrder.InProgress)
+                order.InProgress = newOrder.InProgress;
+            if (newOrder.StateDescription != null && order.StateDescription != newOrder.StateDescription)
+                order.StateDescription = newOrder.StateDescription;
+        }
+
+
 
         private void UpdateOrderProperties(Order newOrder, Order order)
         {

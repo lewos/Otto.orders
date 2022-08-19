@@ -25,6 +25,7 @@ namespace Otto.orders.Models
         public DateTime? Created { get; set; }
         public DateTime? Modified { get; set; }
         public State State { get; set; }
+        public string? StateDescription { get; set; }
         public bool? InProgress { get; set; }
         public string? UserIdInProgress { get; set; }
         public DateTime? InProgressDateTimeTaken { get; set; }
