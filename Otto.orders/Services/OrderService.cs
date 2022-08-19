@@ -68,14 +68,28 @@ namespace Otto.orders.Services
 
         public async Task<Tuple<Order, int>> CreateAsync(Order order)
         {
-            using (var db = new OrderDb())
-            {                
-                await db.Orders.AddAsync(order);
-                var rowsAffected = await db.SaveChangesAsync();
+            try
+            {
+                using (var db = new OrderDb())
+                {
+                    await db.Orders.AddAsync(order);
+                    var rowsAffected = await db.SaveChangesAsync();
 
 
-                return new Tuple<Order, int>(order, rowsAffected);
+                    return new Tuple<Order, int>(order, rowsAffected);
+                }
             }
+            catch (Microsoft.EntityFrameworkCore.DbUpdateException ex)
+            {
+                Console.WriteLine($"Ya existe una orden con ese mOrdenId, se descarta el alta");
+                return new Tuple<Order, int>(order, 1);
+            }
+
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ocurrio un error al dar de alta la orden {ex}");
+                throw;
+            }            
         }
 
         public async Task<Tuple<OrderDTO, int>> UpdateOrderInProgressAsync(int id, string UserIdInProgress)

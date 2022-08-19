@@ -38,6 +38,12 @@ namespace Otto.orders.Migrations
                 {
                     table.PrimaryKey("PK_Orders", x => x.Id);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Orders_MOrderId",
+                table: "Orders",
+                column: "MOrderId",
+                unique: true);
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

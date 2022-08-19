@@ -12,7 +12,7 @@ using Otto.orders.Models;
 namespace Otto.orders.Migrations
 {
     [DbContext(typeof(OrderDb))]
-    [Migration("20220815230352_Initial")]
+    [Migration("20220818234741_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -86,6 +86,9 @@ namespace Otto.orders.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("MOrderId")
+                        .IsUnique();
 
                     b.ToTable("Orders");
                 });

@@ -1,8 +1,15 @@
-﻿namespace Otto.orders.Models
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Otto.orders.Models
 {
+
+    [Index(nameof(MOrderId), IsUnique = true)]
     public class Order
     {
         //id, vendedor, id_item, item_description, quantity ,id_carrito, sku, , shipping_status
+        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         //vendedor
         public string? UserId { get; set; }

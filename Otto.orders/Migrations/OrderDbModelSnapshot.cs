@@ -85,6 +85,9 @@ namespace Otto.orders.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("MOrderId")
+                        .IsUnique();
+
                     b.ToTable("Orders");
                 });
 #pragma warning restore 612, 618
