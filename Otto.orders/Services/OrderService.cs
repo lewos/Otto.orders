@@ -29,12 +29,20 @@ namespace Otto.orders.Services
             }
         }
 
-        public async Task<Order> GetByMOrderIdAsync(long id)
+        public async Task<Order> GetByMOrderIdAsync(string id)
         {
             using (var db = new OrderDb())
             {
-                var order = await db.Orders.Where(t => t.MOrderId == id).FirstOrDefaultAsync();
+                var order = await db.Orders.Where(t => t.MOrderId == long.Parse(id)).FirstOrDefaultAsync();
                 return order;
+            }
+        }
+        public async Task<List<Order>> GetOrderByPackId(string id)
+        {
+            using (var db = new OrderDb())
+            {
+                var orders = await db.Orders.Where(t => t.PackId == id).ToListAsync();
+                return orders;
             }
         }
 
@@ -48,15 +56,55 @@ namespace Otto.orders.Services
         }
 
 
-        public async Task<List<OrderDTO>> GetPendingAsync()
+        public async Task<List<PackDTO>> GetPendingAsync()
         {
             using(var db = new OrderDb())
             {
                 var orders = await db.Orders.Where(t => t.State == State.Pendiente).ToListAsync();
 
                 List<OrderDTO> result = GetListOrderDTO(orders);
-                return result;
+
+                List<PackDTO> otroResult = GetListPackDTO(result);
+
+                return otroResult;
             }
+        }
+
+        private List<PackDTO> GetListPackDTO(List<OrderDTO> orders)
+        {
+            //agrupar por packid
+
+            var result = new List<PackDTO>();
+
+            var groupByPackIdQuery =
+                                    from order in orders
+                                    group order by order.PackId into newGroup
+                                    orderby newGroup.Key
+                                    select newGroup;
+
+            foreach (var nameGroup in groupByPackIdQuery)
+            {
+                var items = new List<OrderDTO>();
+                //ordenes sin pack id
+                if (string.IsNullOrEmpty(nameGroup.Key)) 
+                {
+                    foreach (var order in nameGroup)
+                    {
+                        items = new List<OrderDTO>();
+                        items.Add(order);
+                        result.Add(new PackDTO(order.MOrderId.ToString(), "",  items));
+                    }
+                }
+                else 
+                {
+                    foreach (var order in nameGroup)
+                    {
+                        items.Add(order);
+                    }
+                    result.Add(new PackDTO("", nameGroup.Key, items));
+                }
+            }
+            return result;
         }
 
         private static List<OrderDTO> GetListOrderDTO(List<Order> orders)
@@ -91,20 +139,19 @@ namespace Otto.orders.Services
                 throw;
             }            
         }
-
-        public async Task<Tuple<OrderDTO, int>> UpdateOrderInProgressAsync(int id, string UserIdInProgress)
+        public async Task<Tuple<OrderDTO, int>> UpdateOrderInProgressByMOrderIdAsync(string id, string UserIdInProgress)
         {
             //TODO check con el servicio de usuario con el id UserIdInProgress exista
 
             using (var db = new OrderDb())
             {
-                var order = await db.Orders.Where(t => t.Id == id && t.InProgress == false).FirstOrDefaultAsync();
+                var order = await db.Orders.Where(t => t.MOrderId == long.Parse(id) && t.InProgress == false).FirstOrDefaultAsync();
                 if (order != null)
                 {
                     UpdateOrderInProgressProperties(UserIdInProgress, order);
                     UpdateDateTimeKindForPostgress(order);
                 }
-                else 
+                else
                 {
                     return new Tuple<OrderDTO, int>(null, 0);
                 }
@@ -117,15 +164,47 @@ namespace Otto.orders.Services
             }
         }
 
-        public async Task<Tuple<OrderDTO, int>> UpdateOrderStopInProgressAsync(int id, string UserIdInProgress)
+        public async Task<Tuple<PackDTO, int>> UpdateOrderInProgressByPackIdAsync(string id, string UserIdInProgress)
+        {
+            //TODO check con el servicio de usuario con el id UserIdInProgress exista
+
+            using (var db = new OrderDb())
+            {
+                int rowsAffected = 0;
+
+                var orders = await db.Orders.Where(t => t.PackId == id && t.InProgress == false).ToListAsync();
+                if (orders != null)
+                {
+                    var items = new List<OrderDTO>();
+                    foreach (var order in orders) 
+                    {
+                        UpdateOrderInProgressProperties(UserIdInProgress, order);
+                        UpdateDateTimeKindForPostgress(order);
+                        db.Entry(order).State = EntityState.Modified;
+                        rowsAffected = + await db.SaveChangesAsync();
+                        var dto = OrderMapper.GetOrderDTO(order);
+                        items.Add(dto);
+                    }
+
+                    return new Tuple<PackDTO, int>(new PackDTO("", id, items), rowsAffected);
+                }
+                else 
+                {
+                    return new Tuple<PackDTO, int>(null, 0);
+                }                
+
+            }
+        }
+
+        public async Task<Tuple<OrderDTO, int>> UpdateOrderStopInProgressByMOrderIdAsync(string id, string UserIdInProgress)
         {
             //TODO check con el servicio de usuario con el id UserIdInProgress exista
 
             using (var db = new OrderDb())
             {
                 //quien esta cancelando sea quien la tomo
-                var order = await db.Orders.Where(t => t.Id == id && 
-                                                       t.InProgress == true && 
+                var order = await db.Orders.Where(t => t.MOrderId == long.Parse(id) &&
+                                                       t.InProgress == true &&
                                                        t.UserIdInProgress == UserIdInProgress &&
                                                        t.State != State.Finalizada &&
                                                        t.State != State.Enviada
@@ -145,6 +224,43 @@ namespace Otto.orders.Services
                 var dto = OrderMapper.GetOrderDTO(order);
 
                 return new Tuple<OrderDTO, int>(dto, rowsAffected);
+            }
+        }
+
+
+
+        public async Task<Tuple<PackDTO, int>> UpdateOrderStopInProgressByPackIdAsync(string id, string UserIdInProgress)
+        {
+            //TODO check con el servicio de usuario con el id UserIdInProgress exista
+
+            using (var db = new OrderDb())
+            {
+                int rowsAffected = 0;
+                //quien esta cancelando sea quien la tomo
+                var orders = await db.Orders.Where(t => t.PackId == id && 
+                                                       t.InProgress == true && 
+                                                       t.UserIdInProgress == UserIdInProgress &&
+                                                       t.State != State.Finalizada &&
+                                                       t.State != State.Enviada
+                                                       ).ToListAsync();
+                if (orders != null)
+                {
+                    var items = new List<OrderDTO>();
+                    foreach (var order in orders)
+                    {
+                        UpdateOrderInProgressProperties(UserIdInProgress, order, true);
+                        UpdateDateTimeKindForPostgress(order);
+                        db.Entry(order).State = EntityState.Modified;
+                        rowsAffected = +await db.SaveChangesAsync();
+                        var dto = OrderMapper.GetOrderDTO(order);
+                        items.Add(dto);
+                    }
+                    return new Tuple<PackDTO, int>(new PackDTO("", id, items), rowsAffected);
+                }
+                else
+                {
+                    return new Tuple<PackDTO, int>(null, 0);
+                }
             }
         }
 
@@ -269,7 +385,8 @@ namespace Otto.orders.Services
             order.Created = newOrder.Created;
             order.Modified = utcNow;
             order.State = newOrder.State;
-            order.InProgress = newOrder.InProgress;
+            if(newOrder.InProgress != null)                 
+                order.InProgress = newOrder.InProgress;
             order.UserIdInProgress = newOrder.UserIdInProgress;
             order.InProgressDateTimeTaken = newOrder.InProgressDateTimeTaken;
             order.InProgressDateTimeModified = newOrder.InProgressDateTimeModified;

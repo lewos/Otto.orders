@@ -32,10 +32,17 @@ namespace Otto.orders.Controllers
         }
 
 
-        [HttpGet("{id}", Name = "GetOrder")]
-        public async Task<IActionResult> GetOrder(int id)
+        [HttpGet("GetOrderByMOrderId/{id}", Name = "GetOrderByMOrderId")]
+        public async Task<IActionResult> GetOrderByMOrderId(string id)
         {
-            var result = await _orderService.GetByIdAsync(id);
+            var result = await _orderService.GetByMOrderIdAsync(id);
+            return result != null ? (IActionResult)Ok(result) : NotFound();
+        }
+
+        [HttpGet("GetOrderByPackId/{id}", Name = "GetOrderByPackId")]
+        public async Task<IActionResult> GetOrderByPackId(string id)
+        {
+            var result = await _orderService.GetOrderByPackId(id);
             return result != null ? (IActionResult)Ok(result) : NotFound();
         }
 
@@ -46,22 +53,45 @@ namespace Otto.orders.Controllers
             return Created("GetOrder", result.Item1);
         }
 
-        [HttpPut("TakeOrderById/{id}")]
-        public async Task<IActionResult> TakeOrder(int id, [FromBody] InProgressDTO dto)
+        [HttpPut("TakeOrderByMOrderId/{id}")]
+        public async Task<IActionResult> TakeOrderByMOrderId(string id, [FromBody] InProgressDTO dto)
         {
             dto.Id = id;
-            var result = await _orderService.UpdateOrderInProgressAsync(id, dto.UserIdInProgress);
+            var result = await _orderService.UpdateOrderInProgressByMOrderIdAsync(id, dto.UserIdInProgress);
             if (result.Item2 > 0)
                 return Ok(result.Item1);
             else
                 return Conflict("No se encontro una orden con ese id o la misma ya se encuentra tomada por otro operario");
         }
 
-        [HttpPut("StopTakingOrderById/{id}")]
-        public async Task<IActionResult> StopTakingOrder(int id, [FromBody] InProgressDTO dto)
+        [HttpPut("TakeOrderByPackId/{id}")]
+        public async Task<IActionResult> TakeOrderByPackId(string id, [FromBody] InProgressDTO dto)
         {
             dto.Id = id;
-            var result = await _orderService.UpdateOrderStopInProgressAsync(id, dto.UserIdInProgress);
+            var result = await _orderService.UpdateOrderInProgressByPackIdAsync(id, dto.UserIdInProgress);
+            if (result.Item2 > 0)
+                return Ok(result.Item1);
+            else
+                return Conflict("No se encontro una orden con ese id o la misma ya se encuentra tomada por otro operario");
+        }
+
+        [HttpPut("StopTakingOrderByMOrderId/{id}")]
+        public async Task<IActionResult> StopTakingOrderByMOrderId(string id, [FromBody] InProgressDTO dto)
+        {
+            dto.Id = id;
+            var result = await _orderService.UpdateOrderStopInProgressByMOrderIdAsync(id, dto.UserIdInProgress);
+            if (result.Item2 > 0)
+                return Ok(result.Item1);
+            else
+                return Conflict("No se encontro una orden con ese id o el el id del operario no es el mismo que la tomo o la misma ya se encuentra en un estado final");
+        }
+
+
+        [HttpPut("StopTakingOrderByPackId/{id}")]
+        public async Task<IActionResult> StopTakingOrderByPackId(string id, [FromBody] InProgressDTO dto)
+        {
+            dto.Id = id;
+            var result = await _orderService.UpdateOrderStopInProgressByPackIdAsync(id, dto.UserIdInProgress);
             if (result.Item2 > 0)
                 return Ok(result.Item1);
             else
