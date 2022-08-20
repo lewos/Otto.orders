@@ -1,4 +1,5 @@
 ﻿using Otto.orders.DTOs;
+using Otto.orders.Mapper;
 using Otto.orders.Models;
 using Otto.orders.Models.Responses;
 using System.Text.Json;
@@ -24,8 +25,7 @@ namespace Otto.orders.Services
             //Ver si el topico es el que necesito
             if (!string.IsNullOrEmpty(dto.Topic) && dto.Topic.Contains("orders_v2"))
             {
-                //TODO si ya guarde la orden y mercadolibre sigue notificando, descartar notificacion
-                // Guardar en un cache en memoria, algunas ordenes asi no consulto la base constantemente
+                // TODO Guardar en un cache en memoria, algunas ordenes asi no consulto la base constantemente
                 if (await isNewOrder(dto))
                 {
                     return await CreateOrder(dto);
@@ -113,7 +113,6 @@ namespace Otto.orders.Services
             Console.WriteLine($"Cantidad de filas afectadas {algo.Item2}");
             return algo.Item2;
         }
-
         public async Task<string> GetPrintOrderAsync(string id, PrintReceiptOrderDTO dto)
         {
             var orderDto = await _orderService.GetOrderInProgressByMOrderIdAsync(id, dto.UserIdInProgress);
@@ -272,6 +271,19 @@ namespace Otto.orders.Services
             return mUnreadNotificationsResponse.res == Response.OK
                 ? mUnreadNotificationsResponse.missedFeeds
                 : null;
+        }
+
+        public async Task<Tuple<MTokenDTO, string>> CreateNewMTokenRegisterAsync(string code)
+        {
+            MCodeForTokenDTO mCodeForTokenDTO = await _mercadolibreService.GetTokenWithCodeAsync(code);
+
+            var mToken = AccessTokenMapper.GetMTokenDTO(mCodeForTokenDTO);
+
+            var mAccessTokenResponse = await _accessTokenService.CreateNewRegisterAsync(mToken);
+            if (mAccessTokenResponse.res == Response.OK)
+                return new Tuple<MTokenDTO, string>(mAccessTokenResponse.token, "Ok");
+            else
+                return new Tuple<MTokenDTO, string>(null, "Error");
         }
     }
 }

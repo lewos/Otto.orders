@@ -14,10 +14,9 @@ namespace Otto.orders.Controllers
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly QueueTasks _queueTasks;
         private readonly MOrdersService _mOrdersService;
-        private readonly MercadolibreService _mercadolibreService;
 
         public MOrdersController(IHttpContextAccessor httpContextAccessor, QueueTasks queueTasks,
-            MOrdersService mOrdersService, MercadolibreService mercadolibreService)
+            MOrdersService mOrdersService)
         {
             _httpContextAccessor = httpContextAccessor;
             _queueTasks = queueTasks;
@@ -51,34 +50,62 @@ namespace Otto.orders.Controllers
             return Ok();
         }
 
-
-
-
-        //public GET
-        //TODO si viene con GET
-        //tngo que tomar el codigo de la url
+        //tengo que tomar el codigo de la url
         //llamar a la api para guardar el token
         //lo tengo que redigir a la pagina 
+        //TODO falta la url del front y las paginas de exito y error
+
+
+        //TODO si la respuesta fue ok, hacer la redireccion a una pagina de exito(devolviendo el mUserId),
+        //  Este dato es necesario para que el front actualize el usuario(le tiene que pegar servicio de user)
+        //sino a una de error
+
 
         // GET api/<OrdersController>
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            var avergamondi = _httpContextAccessor.HttpContext.Request;
+            var request = _httpContextAccessor.HttpContext.Request;
 
-            // async procesar notificacion
+            string code = GetCodeFromRequest(request);
+            if (!string.IsNullOrEmpty(code)) 
+            {
+                var tuple = await _mOrdersService.CreateNewMTokenRegisterAsync(code);
+                var token = tuple.Item1;
+                var res = tuple.Item2;
 
-
-
-            Console.WriteLine("Aver si funciona esto");
-            //Console.WriteLine(value);
-            Console.WriteLine("Funciono?");
-
-
-            return Ok();
-
-
+                if (res.Contains("Ok"))
+                    return Redirect($"https://google.com/{token.MUserId}");
+            }
+            return Redirect("https://yahoo.com");
         }
 
+        private string GetCodeFromRequest(HttpRequest request)
+        {
+            try
+            {
+                var query = "";
+                if (request.QueryString.HasValue)
+                    query = request.QueryString.Value;
+
+                var code = "";
+                if (query.Contains("code") && query.Contains("state"))
+                    code = query.Split('&')[0].Split('=')[1];
+                else if (query.Contains("code") && query.Contains("&") && !query.Contains("state"))
+                    code = query.Split('&')[0].Split('=')[1];
+                else if (query.Contains("code") && !query.Contains("&") && !query.Contains("state"))
+                {
+                    code = query.Split('=')[1];
+                }
+
+                return code;
+            }
+            catch (Exception ex )
+            {
+                Console.WriteLine($"Ex:{ex}");
+                return "";
+            }
+            
+        }
     }
 }

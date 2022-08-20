@@ -42,9 +42,9 @@ namespace Otto.orders.Services
                     var mOrder = await JsonSerializer.DeserializeAsync
                         <MOrderDTO>(contentStream);
 
-                    //TODO comentar
-                    string jsonString = JsonSerializer.Serialize(mOrder);
-                    Console.WriteLine(jsonString);
+                    //comentar
+                    //string jsonString = JsonSerializer.Serialize(mOrder);
+                    //Console.WriteLine(jsonString);
 
                     return new MOrderResponse(Response.OK, $"{Response.OK}", mOrder);
 
@@ -151,7 +151,6 @@ namespace Otto.orders.Services
             }
 
         }
-
         public async Task<string> GetPrintOrderAsync(long Resource, string AccessToken, bool pdf = true)
         {
 
@@ -164,6 +163,64 @@ namespace Otto.orders.Services
 
             var pegaleAca = $"curl -X GET -H 'Authorization: Bearer {AccessToken}' {url}";
             return pegaleAca;
+        }
+
+        public async Task<MCodeForTokenDTO> GetTokenWithCodeAsync(string code)
+        {
+            try
+            {
+
+                long mUserId = long.Parse(Environment.GetEnvironmentVariable("APP_MUSER_ID_OWNER"));
+                string appId = Environment.GetEnvironmentVariable("APP_ID");
+                string clientSecret = Environment.GetEnvironmentVariable("CLIENT_SECRET");
+                string redirectUri = Environment.GetEnvironmentVariable("REDIRECT_URI");
+
+                var data = new[]
+                {
+                    new KeyValuePair<string, string>("grant_type", "authorization_code"),
+                    new KeyValuePair<string, string>("client_id", appId),
+                    new KeyValuePair<string, string>("client_secret", clientSecret),
+                    new KeyValuePair<string, string>("code", code),
+                    new KeyValuePair<string, string>("redirect_uri", redirectUri),
+                };                
+
+                //Deberia estar en una variable de entorno
+                string baseUrl = "https://api.mercadolibre.com";
+                string endpoint = $"oauth/token";
+                string url = string.Join('/', baseUrl, endpoint);
+
+
+                var httpRequestMessage = new HttpRequestMessage(
+                    HttpMethod.Post, url);
+
+
+                var httpClient = _httpClientFactory.CreateClient();
+                var httpResponseMessage = await httpClient.PostAsync(url, new FormUrlEncodedContent(data));
+
+                if (httpResponseMessage.IsSuccessStatusCode)
+                {
+                    using var contentStream =
+                        await httpResponseMessage.Content.ReadAsStreamAsync();
+
+                    var dto = await JsonSerializer.DeserializeAsync
+                        <MCodeForTokenDTO>(contentStream);
+
+                    //comentar
+                    string jsonString = JsonSerializer.Serialize(dto);
+                    Console.WriteLine(jsonString);
+
+                    return dto;
+
+                }
+                //si no lo encontro, verificar en donde leo la respuesta del servicio
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error, Ex : {ex}");
+                //verificar en donde leo la respuesta del servicio
+                return null;
+            }
         }
     }
 }
