@@ -19,7 +19,6 @@ namespace Otto.orders.Services
             _orderService = orderService;
             _userService = userService;
         }
-
         public async Task<int> ProcesarOrden(MOrderNotificationDTO dto)
         {
             //Ver si el topico es el que necesito
@@ -39,7 +38,6 @@ namespace Otto.orders.Services
             }
             return 0;
         }
-
         private async Task<int> CreateOrder(MOrderNotificationDTO dto)
         {
             var mOrder = await GetMOrder(dto);
@@ -60,8 +58,6 @@ namespace Otto.orders.Services
 
         //TODO Ver si el producto o item de la orden esta dentro del deposito o es una venta/orden que no esta en el deposito            
         }
-
-
         private async Task<int> UpdateOrder(MOrderNotificationDTO dto)
         {
             var mOrder = await GetMOrder(dto);
@@ -99,6 +95,7 @@ namespace Otto.orders.Services
                 UserId = user?.Id,
                 MUserId = order.Seller.Id,
                 MOrderId = order.Id,
+                MShippingId = order.Shipping.Id,
                 //BusinessId
                 ItemId = order.OrderItems[0].Item.Id,
                 ItemDescription = order.OrderItems[0].Item.Title,
@@ -116,6 +113,30 @@ namespace Otto.orders.Services
             Console.WriteLine($"Cantidad de filas afectadas {algo.Item2}");
             return algo.Item2;
         }
+
+        public async Task<string> GetPrintOrderAsync(string id, PrintReceiptOrderDTO dto)
+        {
+            var orderDto = await _orderService.GetOrderInProgressByMOrderIdAsync(id, dto.UserIdInProgress);
+
+            if (orderDto != null)
+            {
+
+                MTokenDTO accessToken = await GetAccessToken((long)orderDto.MUserId);
+
+                var orderResponse = new MOrderResponse(Response.ERROR, "", new MOrderDTO());
+
+                if (accessToken != null)
+                {
+                    //obtener el link del pdf para imprimir
+                    var pdf = await _mercadolibreService.GetPrintOrderAsync((long)orderDto.MShippingId, accessToken.AccessToken);
+
+                    return pdf;
+
+                }
+            }
+            return "No se encontro una orden con ese id o no se pudo obtener el token";
+        }
+
         private async Task<MOrderDTO> GetMOrder(MOrderNotificationDTO dto)
         {
             //Buscar el accessToken de ese usuario
@@ -171,7 +192,6 @@ namespace Otto.orders.Services
                 throw;
             }
         }
-
         private async Task<int> CreateOrder(MOrderDTO order)
         {
             // Buscar ese usuario id
@@ -183,6 +203,7 @@ namespace Otto.orders.Services
                 UserId = user?.Id == null ? null : user?.Id,
                 MUserId = order?.Seller?.Id == null ? null : order.Seller.Id,
                 MOrderId = order?.Id == null ? null : order.Id,
+                MShippingId = order.Shipping?.Id == null ? null : order.Shipping.Id,
                 //BusinessId
                 ItemId = order?.OrderItems[0].Item.Id == null ? null : order.OrderItems[0].Item.Id,
                 ItemDescription = order?.OrderItems[0].Item.Title == null ? null : order.OrderItems[0].Item.Title,

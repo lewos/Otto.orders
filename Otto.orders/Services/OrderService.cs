@@ -114,6 +114,40 @@ namespace Otto.orders.Services
             return result;
         }
 
+        public async Task<OrderDTO> GetOrderInProgressByMOrderIdAsync(string id, string? userIdInProgress)
+        {
+            using (var db = new OrderDb())
+            {
+                var order = await db.Orders.Where(t => t.MOrderId == long.Parse(id) && 
+                                                       t.State == State.Tomada &&
+                                                       t.InProgress == true &&
+                                                       t.UserIdInProgress == userIdInProgress).FirstOrDefaultAsync();
+                
+                return order != null ? OrderMapper.GetOrderDTO(order) : null;                
+            }
+        }
+
+        public async Task<PackDTO> GetOrderInProgressByPackIdAsync(string id, string? userIdInProgress)
+        {
+            using (var db = new OrderDb())
+            {
+                var orders = await db.Orders.Where(t => t.PackId == id &&
+                                                       t.State == State.Tomada &&
+                                                       t.InProgress == true &&
+                                                       t.UserIdInProgress == userIdInProgress).ToListAsync();
+
+                var items = new List<OrderDTO>();
+                foreach (var order in orders)
+                {
+                    var dto = OrderMapper.GetOrderDTO(order);
+                    items.Add(dto);
+                }
+                return new PackDTO("", id, items);
+            }
+        }
+
+
+
         public async Task<Tuple<Order, int>> CreateAsync(Order order)
         {
             try

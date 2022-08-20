@@ -15,6 +15,7 @@ namespace Otto.orders.Models
         public string? UserId { get; set; }
         public long? MUserId { get; set; }
         public long? MOrderId { get; set; }
+        public long? MShippingId { get; set; }
         public long? BusinessId { get; set; }
         public string ItemId { get; set; } = null!;
         public string ItemDescription { get; set; } = null!;

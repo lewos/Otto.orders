@@ -11,10 +11,12 @@ namespace Otto.orders.Controllers
     public class OrderController : ControllerBase
     {
         private readonly OrderService _orderService;
+        private readonly MOrdersService _mOrdersService;
 
-        public OrderController(OrderService orderService)
+        public OrderController(OrderService orderService, MOrdersService mOrdersService)
         {
             _orderService = orderService;
+            _mOrdersService = mOrdersService;
         }
 
         [HttpGet]
@@ -122,9 +124,15 @@ namespace Otto.orders.Controllers
                 return Conflict("No se encontro una orden con ese id o el el id del operario no es el mismo que la tomo o la misma ya se encuentra en un estado final");
         }
 
+        [HttpPost("PrintOrderReceiptByMOrderId/{id}")]
+        public async Task<IActionResult> PrintOrderReceiptByMOrderId(string id, [FromBody] PrintReceiptOrderDTO dto)
+        {
+            dto.Id = id;
 
+            var result = await _mOrdersService.GetPrintOrderAsync(id, dto);
 
-
+            return Ok(result);            
+        }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> Put(int id, [FromBody] Order order)
