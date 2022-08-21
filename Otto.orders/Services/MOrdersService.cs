@@ -12,13 +12,15 @@ namespace Otto.orders.Services
         private readonly MercadolibreService _mercadolibreService;
         private readonly OrderService _orderService;
         private readonly UserService _userService;
+        private readonly StockService _stockService;
 
-        public MOrdersService(AccessTokenService accessTokenService, MercadolibreService mercadolibreService, OrderService orderService, UserService userService)
+        public MOrdersService(AccessTokenService accessTokenService, MercadolibreService mercadolibreService, OrderService orderService, UserService userService, StockService stockService)
         {
             _accessTokenService = accessTokenService;
             _mercadolibreService = mercadolibreService;
             _orderService = orderService;
             _userService = userService;
+            _stockService = stockService;
         }
         public async Task<int> ProcesarOrden(MOrderNotificationDTO dto)
         {
@@ -113,6 +115,35 @@ namespace Otto.orders.Services
             Console.WriteLine($"Cantidad de filas afectadas {algo.Item2}");
             return algo.Item2;
         }
+
+        public async Task<Tuple<OrderDTO, int>> UpdateFinalizeOrderByMOrderIdAsync(string id, string? userIdInProgress)
+        {
+            var result = await _orderService.UpdateFinalizeOrderByMOrderIdAsync(id, userIdInProgress);
+            if (result.Item2 > 0) 
+            {
+                var orderDTO = result.Item1;
+                // restar stock de la venta finalizada ej "MLA1149237532"
+                var pudoActualizarStock = await _stockService.UpdateQuantity(new UpdateQuantityDTO(orderDTO.Quantity,orderDTO.ItemId));
+            }
+            return result;
+        }
+
+        public async Task<Tuple<PackDTO, int>> UpdateFinalizeOrderByPackIdAsync(string id, string? userIdInProgress)
+        {
+            var result = await _orderService.UpdateOrderStopInProgressByPackIdAsync(id, userIdInProgress);
+            if (result.Item2 > 0)
+            {
+                var itemsInPack = result.Item1;
+                foreach (var orderDTO in itemsInPack.Items) 
+                {
+                    // restar stock de la venta finalizada ej "MLA1149237532"
+                    var pudoActualizarStock = await _stockService.UpdateQuantity(new UpdateQuantityDTO(orderDTO.Quantity, orderDTO.ItemId));
+                }
+            }
+            return result;
+        }
+
+
         public async Task<string> GetPrintOrderAsync(string id, PrintReceiptOrderDTO dto)
         {
             var orderDto = await _orderService.GetOrderInProgressByMOrderIdAsync(id, dto.UserIdInProgress);

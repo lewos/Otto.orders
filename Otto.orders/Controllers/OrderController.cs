@@ -105,7 +105,8 @@ namespace Otto.orders.Controllers
         public async Task<IActionResult> FinalizeOrderByMOrderId(string id, [FromBody] InProgressDTO dto)
         {
             dto.Id = id;
-            var result = await _orderService.UpdateFinalizeOrderByMOrderIdAsync(id, dto.UserIdInProgress);
+            var result = await _mOrdersService.UpdateFinalizeOrderByMOrderIdAsync(id, dto.UserIdInProgress);
+            
             if (result.Item2 > 0)
                 return Ok(result.Item1);
             else
@@ -117,7 +118,7 @@ namespace Otto.orders.Controllers
         public async Task<IActionResult> FinalizeOrderByPackId(string id, [FromBody] InProgressDTO dto)
         {
             dto.Id = id;
-            var result = await _orderService.UpdateOrderStopInProgressByPackIdAsync(id, dto.UserIdInProgress);
+            var result = await _mOrdersService.UpdateFinalizeOrderByPackIdAsync(id, dto.UserIdInProgress);            
             if (result.Item2 > 0)
                 return Ok(result.Item1);
             else
