@@ -153,16 +153,24 @@ namespace Otto.orders.Services
         }
         public async Task<string> GetPrintOrderAsync(long Resource, string AccessToken, bool pdf = true)
         {
+            try
+            {
+                //Deberia estar en una variable de entorno
+                string baseUrl = "https://api.mercadolibre.com";
+                //Por ahora solo busco pdf
+                string responseType = pdf ? "pdf" : "zpl2";
+                string endpoint = $"shipment_labels?shipment_ids={Resource}&response_type={responseType}";
+                string url = string.Join('/', baseUrl, endpoint);
 
-            //Deberia estar en una variable de entorno
-            string baseUrl = "https://api.mercadolibre.com";
-            //Por ahora solo busco pdf
-            string responseType = pdf ? "pdf" : "zpl2";
-            string endpoint = $"shipment_labels?shipment_ids={Resource}&response_type={responseType}";
-            string url = string.Join('/', baseUrl, endpoint);
+                var pegaleAca = $"curl -X GET -H 'Authorization: Bearer {AccessToken}' {url}";
+                return pegaleAca;
 
-            var pegaleAca = $"curl -X GET -H 'Authorization: Bearer {AccessToken}' {url}";
-            return pegaleAca;
+            }
+            catch (Exception ex )
+            {
+                var aver = ex;
+                throw;
+            }
         }
 
         public async Task<MCodeForTokenDTO> GetTokenWithCodeAsync(string code)

@@ -167,6 +167,32 @@ namespace Otto.orders.Services
             return "No se encontro una orden con ese id o no se pudo obtener el token";
         }
 
+
+        public async Task<string> GetPrintOrderByPackIdAsync(string id, PrintReceiptOrderDTO dto)
+        {
+            var packDto = await _orderService.GetOrderInProgressByPackIdAsync(id, dto.UserIdInProgress);
+
+            if (packDto != null && packDto.Items.Count > 0)
+            {
+                var orderDto = packDto.Items.FirstOrDefault();
+                if (orderDto != null) 
+                {
+                    MTokenDTO accessToken = await GetAccessToken((long)orderDto.MUserId);
+
+                    var orderResponse = new MOrderResponse(Response.ERROR, "", new MOrderDTO());
+
+                    if (accessToken != null)
+                    {
+                        //obtener el link del pdf para imprimir
+                        var pdf = await _mercadolibreService.GetPrintOrderAsync((long)orderDto.MShippingId, accessToken.AccessToken);
+
+                        return pdf;
+
+                    }
+                }
+            }
+            return "No se encontro una orden con ese id o no se pudo obtener el token";
+        }
         private async Task<MOrderDTO> GetMOrder(MOrderNotificationDTO dto)
         {
             //Buscar el accessToken de ese usuario

@@ -135,6 +135,16 @@ namespace Otto.orders.Controllers
             return Ok(result);            
         }
 
+        [HttpPost("PrintOrderReceiptByPackId/{id}")]
+        public async Task<IActionResult> PrintOrderReceiptByPackId(string id, [FromBody] PrintReceiptOrderDTO dto)
+        {
+            dto.Id = id;
+
+            var result = await _mOrdersService.GetPrintOrderByPackIdAsync(id, dto);
+
+            return Ok(result);
+        }
+
         [HttpPut("{id}")]
         public async Task<IActionResult> Put(int id, [FromBody] Order order)
         {
