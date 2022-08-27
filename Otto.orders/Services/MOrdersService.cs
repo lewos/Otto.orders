@@ -130,7 +130,7 @@ namespace Otto.orders.Services
 
         public async Task<Tuple<PackDTO, int>> UpdateFinalizeOrderByPackIdAsync(string id, string? userIdInProgress)
         {
-            var result = await _orderService.UpdateOrderStopInProgressByPackIdAsync(id, userIdInProgress);
+            var result = await _orderService.UpdateFinalizeOrderByPackIdAsync(id, userIdInProgress);
             if (result.Item2 > 0)
             {
                 var itemsInPack = result.Item1;

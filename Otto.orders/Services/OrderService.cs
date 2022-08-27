@@ -332,6 +332,42 @@ namespace Otto.orders.Services
             }
         }
 
+        public async Task<Tuple<PackDTO, int>> UpdateFinalizeOrderByPackIdAsync(string id, string UserIdInProgress)
+        {
+            //TODO check con el servicio de usuario con el id UserIdInProgress exista
+
+            using (var db = new OrderDb())
+            {
+                int rowsAffected = 0;
+                //quien esta cancelando sea quien la tomo
+                var orders = await db.Orders.Where(t => t.PackId == id &&
+                                                       t.InProgress == true &&
+                                                       t.UserIdInProgress == UserIdInProgress &&
+                                                       t.State != State.Finalizada &&
+                                                       t.State != State.Cancelada &&
+                                                       t.State != State.Enviada
+                                                       ).ToListAsync();
+                if (orders != null)
+                {
+                    var items = new List<OrderDTO>();
+                    foreach (var order in orders)
+                    {
+                        UpdateFinalizeOrder(UserIdInProgress, order);
+                        UpdateDateTimeKindForPostgress(order);
+                        db.Entry(order).State = EntityState.Modified;
+                        rowsAffected = +await db.SaveChangesAsync();
+                        var dto = OrderMapper.GetOrderDTO(order);
+                        items.Add(dto);
+                    }
+                    return new Tuple<PackDTO, int>(new PackDTO("", id, items), rowsAffected);
+                }
+                else
+                {
+                    return new Tuple<PackDTO, int>(null, 0);
+                }
+            }
+        }
+
         private void UpdateFinalizeOrder(string UserIdInProgress, Order order)
         {
             var utcNow = DateTime.UtcNow;
