@@ -283,7 +283,7 @@ namespace Otto.orders.Services
                     var items = new List<OrderDTO>();
                     foreach (var order in orders)
                     {
-                        UpdateFinalizeOrder(UserIdInProgress, order);
+                        UpdateOrderInProgressProperties(UserIdInProgress, order, true);
                         UpdateDateTimeKindForPostgress(order);
                         db.Entry(order).State = EntityState.Modified;
                         rowsAffected = +await db.SaveChangesAsync();
