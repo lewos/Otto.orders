@@ -15,6 +15,7 @@ builder.Services.AddScoped<MercadolibreService>();
 builder.Services.AddScoped<MOrdersService>();
 builder.Services.AddScoped<OrderService>();
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<StockService>();
 builder.Services.AddDbContext<OrderDb>();
 builder.Services.AddHttpClient();
 
